@@ -1,0 +1,77 @@
+@model List<PaintERP.Models.Entities.Warehouse>
+@{
+    ViewData["Title"] = "Warehouses";
+    ViewData["Action"] = "Index";
+}
+
+<link rel="stylesheet" href="~/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Warehouses</h1>
+            <p class="page-subtitle">Manage warehouse locations and inventory</p>
+        </div>
+        <div class="header-right">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="icon-plus"></i>
+                New Warehouse
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">All Warehouses</div>
+            <div class="card-actions">
+                <input type="text" class="search-input" placeholder="Search warehouses..." id="warehouseSearch">
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>Company</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr class="data-row">
+                                <td>@item.Name</td>
+                                <td>@item.Location</td>
+                                <td>@item.Company?.Name</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-icon" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn-icon btn-danger" title="Delete">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('warehouseSearch').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('.data-row');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+</script>

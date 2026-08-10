@@ -1,0 +1,70 @@
+@model PaintERP.Models.Entities.VendorPayment
+@{
+    ViewData["Title"] = "Delete Vendor Payment";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Delete Vendor Payment</h1>
+            <p class="page-subtitle">@Model.PaymentNumber</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="Index">
+                <i class="icon-arrow-left"></i>
+                Back to Payments
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">Confirm Deletion</div>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h3>Are you sure you want to delete this vendor payment?</h3>
+                <p>This action cannot be undone and will revert the bill payments.</p>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <label>Payment Number:</label>
+                    <span>@Model.PaymentNumber</span>
+                </div>
+                <div class="detail-item">
+                    <label>Vendor:</label>
+                    <span>@Model.Vendor?.BusinessName</span>
+                </div>
+                <div class="detail-item">
+                    <label>Payment Date:</label>
+                    <span>@Model.PaymentDate.ToString("MM/dd/yyyy")</span>
+                </div>
+                <div class="detail-item">
+                    <label>Total Payment Amount:</label>
+                    <span>@Model.TotalPaymentAmount.ToString("C")</span>
+                </div>
+                <div class="detail-item">
+                    <label>Status:</label>
+                    <span>@Model.Status</span>
+                </div>
+                <div class="detail-item">
+                    <label>Bills Applied:</label>
+                    <span>@Model.VendorPaymentBills.Count</span>
+                </div>
+            </div>
+
+            <form asp-action="Delete" method="post" class="mt-4">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-danger">
+                    <i class="icon-trash"></i> Delete Payment
+                </button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>

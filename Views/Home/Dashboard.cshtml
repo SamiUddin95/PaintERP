@@ -1,0 +1,121 @@
+@model PaintERP.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<section class="dashboard">
+    <header class="dashboard-header">
+        <div>
+            <h1>Executive Overview</h1>
+            <p>@Model.CompanyName • @Model.CompanySubtitle</p>
+        </div>
+        <div class="dashboard-actions">
+            <button class="ghost" onclick="window.location.href='/Report'">Export</button>
+            <button class="primary" onclick="window.location.href='/SalesInvoice/Create'">New Invoice</button>
+        </div>
+    </header>
+
+    <div class="kpi-grid">
+        @foreach (var kpi in Model.Kpis)
+        {
+            <article class="kpi-card" style="--accent:@kpi.AccentColor">
+                <h3>@kpi.Title</h3>
+                <p class="value">@kpi.Value</p>
+                <span>@kpi.TrendLabel</span>
+                <strong>@kpi.TrendValue</strong>
+            </article>
+        }
+    </div>
+
+    <div class="chart-grid">
+        @foreach (var chart in Model.Charts)
+        {
+            <article class="chart-card">
+                <div class="chart-card__header">
+                    <h3>@chart.Title</h3>
+                    <small>@chart.Subtitle</small>
+                </div>
+                <canvas data-type="@chart.ChartType"
+                        data-labels="@string.Join(',', chart.Labels)"
+                        data-values="@string.Join(',', chart.Values)"
+                        data-color="@chart.AccentColor"></canvas>
+            </article>
+        }
+    </div>
+
+    <div class="widget-grid">
+        @foreach (var widget in Model.Widgets)
+        {
+            <article class="widget">
+                <h3>@widget.Title</h3>
+                <ul>
+                    @foreach (var row in widget.Rows)
+                    {
+                        <li>
+                            <div>
+                                <p>@row.Primary</p>
+                                <small>@row.Secondary</small>
+                            </div>
+                            <span class="status-badge @row.StatusClass">@row.Status</span>
+                        </li>
+                    }
+                </ul>
+            </article>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.chart-card canvas').forEach((canvas, index) => {
+            const labels = canvas.dataset.labels.split(',');
+            const values = canvas.dataset.values.split(',').map(Number);
+            const chartType = canvas.dataset.type === 'area' ? 'line' : canvas.dataset.type;
+
+            new Chart(canvas, {
+                type: chartType,
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: canvas.dataset.color,
+                        borderColor: canvas.dataset.color,
+                        fill: canvas.dataset.type === 'area',
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: canvas.dataset.type === 'line' || canvas.dataset.type === 'area' ? 4 : 0,
+                        pointBackgroundColor: canvas.dataset.color,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1E293B',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    },
+                    scales: canvas.dataset.type === 'donut' ? {} : {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#64748B', font: { size: 11 } }
+                        },
+                        y: {
+                            grid: { display: true, color: '#E2E8F0', drawBorder: false },
+                            ticks: { color: '#64748B', font: { size: 11 } }
+                        }
+                    },
+                    cutout: canvas.dataset.type === 'donut' ? '70%' : undefined
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,226 @@
+@model PaintERP.Models.Entities.PurchaseOrder
+@{
+    ViewData["Title"] = "Purchase Order Details";
+}
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Purchase Order Details</h1>
+            <p class="page-subtitle">@Model.PONumber</p>
+        </div>
+        <div class="header-right">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="icon-edit"></i> Edit
+            </a>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="icon-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="bill-layout">
+        <!-- Main Content -->
+        <div class="bill-main">
+            <!-- Header Section -->
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Purchase Order Information</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Vendor</label>
+                            <input value="@Model.Vendor?.BusinessName" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>PO Number</label>
+                            <input value="@Model.PONumber" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Order Date</label>
+                            <input value="@Model.OrderDate.ToString("MMM dd, yyyy")" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Expected Delivery</label>
+                            <input value="@(Model.ExpectedDeliveryDate?.ToString("MMM dd, yyyy") ?? "-")" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Warehouse</label>
+                            <input value="@Model.Warehouse?.Name" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Buyer</label>
+                            <input value="@Model.Buyer" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Shipping Address</label>
+                        <textarea class="form-control" rows="2" readonly>@Model.ShippingAddress</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Payment Terms</label>
+                            <input value="@Model.PaymentTerms" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Reference Number</label>
+                            <input value="@Model.ReferenceNumber" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Status</label>
+                            <input value="@Model.Status" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Approved</label>
+                            <input value="@(Model.IsApproved ? "Yes" : "No")" class="form-control" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Grid -->
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Line Items</div>
+                </div>
+                <div class="card-body">
+                    <div class="items-grid">
+                        <div class="items-header">
+                            <div class="col-item">Item</div>
+                            <div class="col-qty-ordered">Qty Ordered</div>
+                            <div class="col-qty-received">Qty Received</div>
+                            <div class="col-qty-pending">Qty Pending</div>
+                            <div class="col-unit-cost">Unit Cost</div>
+                            <div class="col-discount">Discount %</div>
+                            <div class="col-tax">Tax %</div>
+                            <div class="col-total">Total</div>
+                        </div>
+                        @foreach (var item in Model.PurchaseOrderItems)
+                        {
+                            <div class="item-row">
+                                <div class="col-item">
+                                    <input value="@item.Description" class="form-control form-control-sm" readonly>
+                                </div>
+                                <div class="col-qty-ordered">
+                                    <input value="@item.QuantityOrdered.ToString("F2")" class="form-control form-control-sm" readonly>
+                                </div>
+                                <div class="col-qty-received">
+                                    <input value="@item.QuantityReceived.ToString("F2")" class="form-control form-control-sm" readonly>
+                                </div>
+                                <div class="col-qty-pending">
+                                    <input value="@item.QuantityPending.ToString("F2")" class="form-control form-control-sm" readonly>
+                                </div>
+                                <div class="col-unit-cost">
+                                    <input value="@item.UnitCost.ToString("F2")" class="form-control form-control-sm" readonly>
+                                </div>
+                                <div class="col-discount">
+                                    <input value="@item.DiscountPercent.ToString("F2")" class="form-control form-control-sm" readonly>
+                                </div>
+                                <div class="col-tax">
+                                    <input value="@item.TaxPercent.ToString("F2")" class="form-control form-control-sm" readonly>
+                                </div>
+                                <div class="col-total">
+                                    <input value="@item.LineTotal.ToString("F2")" class="form-control form-control-sm" readonly>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Summary</div>
+                </div>
+                <div class="card-body">
+                    <div class="summary-row">
+                        <label>Subtotal</label>
+                        <input value="@Model.Subtotal.ToString("F2")" class="form-control summary-input" readonly>
+                    </div>
+                    <div class="summary-row">
+                        <label>Discount Amount</label>
+                        <input value="@Model.DiscountAmount.ToString("F2")" class="form-control summary-input" readonly>
+                    </div>
+                    <div class="summary-row">
+                        <label>Tax Amount</label>
+                        <input value="@Model.TaxAmount.ToString("F2")" class="form-control summary-input" readonly>
+                    </div>
+                    <div class="summary-row">
+                        <label>Shipping Cost</label>
+                        <input value="@Model.ShippingCost.ToString("F2")" class="form-control summary-input" readonly>
+                    </div>
+                    <div class="summary-row">
+                        <label>Amount Received</label>
+                        <input value="@Model.AmountReceived.ToString("F2")" class="form-control summary-input" readonly>
+                    </div>
+                    <div class="summary-row summary-total">
+                        <label>Total Amount</label>
+                        <input value="@Model.TotalAmount.ToString("F2")" class="form-control summary-input" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Notes</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Internal Notes</label>
+                        <textarea class="form-control" rows="3" readonly>@Model.InternalNotes</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Vendor Notes</label>
+                        <textarea class="form-control" rows="3" readonly>@Model.VendorNotes</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="bill-sidebar">
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Status</div>
+                </div>
+                <div class="card-body">
+                    <div class="sidebar-info">
+                        <label>Approved</label>
+                        <span class="info-value @(Model.IsApproved ? "text-success" : "text-danger")">@(Model.IsApproved ? "Yes" : "No")</span>
+                    </div>
+                    <div class="sidebar-info">
+                        <label>Cancelled</label>
+                        <span class="info-value @(Model.IsCancelled ? "text-danger" : "text-success")">@(Model.IsCancelled ? "Yes" : "No")</span>
+                    </div>
+                    <div class="sidebar-info">
+                        <label>Fully Received</label>
+                        <span class="info-value @(Model.IsFullyReceived ? "text-success" : "text-warning")">@(Model.IsFullyReceived ? "Yes" : "No")</span>
+                    </div>
+                    @if (Model.ApprovedDate.HasValue)
+                    {
+                        <div class="sidebar-info">
+                            <label>Approved Date</label>
+                            <span class="info-value">@Model.ApprovedDate.Value.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    }
+                    @if (Model.CancelledDate.HasValue)
+                    {
+                        <div class="sidebar-info">
+                            <label>Cancelled Date</label>
+                            <span class="info-value">@Model.CancelledDate.Value.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

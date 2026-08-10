@@ -1,0 +1,173 @@
+@model IEnumerable<PaintERP.Models.Entities.StockLedger>
+@{
+    ViewData["Title"] = "Stock Ledger";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Inventory Stock Ledger</h1>
+            <p class="page-subtitle">Track all inventory movements with filters and export options</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="ExportCSV" asp-route-startDate="@ViewBag.StartDate" asp-route-endDate="@ViewBag.EndDate" asp-route-warehouseId="@ViewBag.WarehouseId" asp-route-paintItemId="@ViewBag.PaintItemId" asp-route-transactionType="@ViewBag.TransactionType">
+                <i class="icon-download"></i> Export CSV
+            </a>
+        </div>
+    </div>
+
+    <form method="get" id="stockLedgerFilterForm" asp-action="Index">
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title">Filters</div>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="StartDate">Start Date</label>
+                        <input type="date" class="form-control" id="StartDate" name="StartDate" value="@(ViewBag.StartDate?.ToString("yyyy-MM-dd") ?? "")" />
+                    </div>
+                    <div class="form-group">
+                        <label for="EndDate">End Date</label>
+                        <input type="date" class="form-control" id="EndDate" name="EndDate" value="@(ViewBag.EndDate?.ToString("yyyy-MM-dd") ?? "")" />
+                    </div>
+                    <div class="form-group">
+                        <label for="WarehouseId">Warehouse</label>
+                        <select class="form-control" id="WarehouseId" name="WarehouseId">
+                            <option value="">All Warehouses</option>
+                            @if (ViewBag.Warehouses != null)
+                            {
+                                @foreach (var warehouse in ViewBag.Warehouses)
+                                {
+                                    <option value="@warehouse.Id" selected="@(ViewBag.WarehouseId == warehouse.Id)">@warehouse.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="PaintItemId">Item</label>
+                        <select class="form-control" id="PaintItemId" name="PaintItemId">
+                            <option value="">All Items</option>
+                            @if (ViewBag.PaintItems != null)
+                            {
+                                @foreach (var item in ViewBag.PaintItems)
+                                {
+                                    <option value="@item.Id" selected="@(ViewBag.PaintItemId == item.Id)">@item.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="TransactionType">Transaction Type</label>
+                        <select class="form-control" id="TransactionType" name="TransactionType">
+                            <option value="">All Types</option>
+                            @if (ViewBag.TransactionTypes != null)
+                            {
+                                @foreach (var type in ViewBag.TransactionTypes)
+                                {
+                                    <option value="@type" selected="@(ViewBag.TransactionType == type)">@type</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="icon-filter"></i> Apply Filters
+                    </button>
+                    <a class="btn btn-secondary" asp-action="Index">
+                        <i class="icon-refresh-cw"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">Stock Ledger Entries</div>
+            <div class="card-actions">
+                <input type="text" id="ledgerSearch" class="search-input" placeholder="Search ledger..." onkeyup="filterLedger()" />
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-container ledger-table-container">
+                <table class="data-table ledger-table" id="stockLedgerTable">
+                    <thead class="sticky-header">
+                        <tr>
+                            <th>Date</th>
+                            <th>Transaction</th>
+                            <th>Reference</th>
+                            <th>Item</th>
+                            <th class="text-right">IN Qty</th>
+                            <th class="text-right">OUT Qty</th>
+                            <th class="text-right">Balance</th>
+                            <th>User</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in Model)
+                        {
+                            if (entry.TransactionType == "Opening Balance")
+                            {
+                                <tr class="data-row opening-balance-row">
+                                    <td colspan="4">
+                                        <strong>Opening Balance</strong>
+                                        @if (entry.Remarks != null)
+                                        {
+                                            <span class="text-muted">(@entry.Remarks)</span>
+                                        }
+                                    </td>
+                                    <td class="text-right">-</td>
+                                    <td class="text-right">-</td>
+                                    <td class="text-right font-weight-bold">@entry.RunningBalance.ToString("F2")</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                <tr class="data-row">
+                                    <td>@entry.TransactionDate.ToString("MM/dd/yyyy HH:mm")</td>
+                                    <td>
+                                        <span class="transaction-badge type-@entry.TransactionType.ToLower().Replace(" ", "")">@entry.TransactionType</span>
+                                    </td>
+                                    <td>@entry.ReferenceNumber</td>
+                                    <td>
+                                        <div class="item-name">@entry.PaintItem?.Name</div>
+                                        @if (!string.IsNullOrEmpty(entry.PaintItem?.SKU))
+                                        {
+                                            <div class="item-sku">@entry.PaintItem.SKU</div>
+                                        }
+                                    </td>
+                                    <td class="text-right @(entry.InQty > 0 ? "text-success" : "")">@(entry.InQty > 0 ? entry.InQty.ToString("F2") : "-")</td>
+                                    <td class="text-right @(entry.OutQty > 0 ? "text-danger" : "")">@(entry.OutQty > 0 ? entry.OutQty.ToString("F2") : "-")</td>
+                                    <td class="text-right font-weight-bold">@entry.RunningBalance.ToString("F2")</td>
+                                    <td>@entry.UserName</td>
+                                    <td>@entry.Remarks</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filterLedger() {
+        const input = document.getElementById('ledgerSearch');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('stockLedgerTable');
+        const rows = table.querySelectorAll('tbody tr.data-row');
+
+        rows.forEach(row => {
+            const text = row.textContent?.toLowerCase() || '';
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    }
+</script>

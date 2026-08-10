@@ -1,0 +1,457 @@
+@model PaintERP.Models.ViewModels.PurchaseOrderFormViewModel
+@{
+    ViewData["Title"] = "Edit Purchase Order";
+}
+
+<link rel="stylesheet" href="~/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <div class="page-title-row">
+                <h1 class="page-title">Edit Purchase Order</h1>
+                <span class="status-badge status-@Model.Status.ToLower()">@Model.Status</span>
+            </div>
+            <p class="page-subtitle">@Model.PONumber</p>
+        </div>
+        <div class="header-right">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="icon-arrow-left"></i>
+                Back to Purchase Orders
+            </a>
+        </div>
+    </div>
+
+    <form asp-action="Edit" method="post" class="bill-form" id="poForm">
+        <div asp-validation-summary="All" class="validation-summary"></div>
+        <input type="hidden" asp-for="Id" />
+        <div class="bill-layout">
+            <div class="bill-main">
+                <!-- PO Information -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Purchase Order Information</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="VendorId" class="required">Vendor</label>
+                                <select asp-for="VendorId" class="form-control" asp-items="@(new SelectList(Model.Vendors, "Id", "BusinessName"))">
+                                    <option value="">Select Vendor</option>
+                                </select>
+                                <span asp-validation-for="VendorId" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="PONumber">PO Number</label>
+                                <input asp-for="PONumber" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="OrderDate" class="required">Order Date</label>
+                                <input asp-for="OrderDate" type="date" class="form-control" id="orderDate" />
+                                <span asp-validation-for="OrderDate" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="ExpectedDeliveryDate">Expected Delivery</label>
+                                <input asp-for="ExpectedDeliveryDate" type="date" class="form-control" id="expectedDeliveryDate" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="WarehouseId">Warehouse</label>
+                                <select asp-for="WarehouseId" class="form-control" asp-items="@(new SelectList(Model.Warehouses, "Id", "Name"))">
+                                    <option value="">Select Warehouse</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Buyer" class="required">Buyer</label>
+                                <input asp-for="Buyer" class="form-control" placeholder="Enter buyer name" />
+                                <span asp-validation-for="Buyer" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="ShippingAddress" class="required">Shipping Address</label>
+                            <textarea asp-for="ShippingAddress" class="form-control" rows="2" placeholder="Enter shipping address"></textarea>
+                            <span asp-validation-for="ShippingAddress" class="text-danger"></span>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="PaymentTerms" class="required">Payment Terms</label>
+                                <select asp-for="PaymentTerms" class="form-control" asp-items="@(new SelectList(Model.PaymentTermsOptions))">
+                                </select>
+                                <span asp-validation-for="PaymentTerms" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="ReferenceNumber" class="required">Reference Number</label>
+                                <input asp-for="ReferenceNumber" class="form-control" placeholder="Enter reference number" />
+                                <span asp-validation-for="ReferenceNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Grid -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Line Items</div>
+                        <div class="card-actions">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="addPurchaseOrderItem()">
+                                <i class="icon-plus"></i> Add Row
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLastPurchaseOrderItemRow()">
+                                <i class="icon-trash"></i> Delete Row
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="items-grid-scroll">
+                        <table class="items-table items-table-po">
+                            <colgroup>
+                                <col>
+                                <col style="width:95px">
+                                <col style="width:95px">
+                                <col style="width:95px">
+                                <col style="width:80px">
+                                <col style="width:80px">
+                                <col style="width:115px">
+                                <col style="width:38px">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="col-item">Item</th>
+                                    <th class="col-qty-ordered">Qty Ordered</th>
+                                    <th class="col-qty-received">Qty Received</th>
+                                    <th class="col-unit-cost">Unit Cost</th>
+                                    <th class="col-discount">Discount</th>
+                                    <th class="col-tax">Tax</th>
+                                    <th class="col-total">Total</th>
+                                    <th class="col-action"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchaseOrderItemsContainer">
+                                @for (int i = 0; i < Model.PurchaseOrderItems.Count; i++)
+                                {
+                                    <tr class="item-row" data-index="@i">
+                                        <td class="col-item">
+                                            <input type="hidden" asp-for="PurchaseOrderItems[i].Id" />
+                                            <input type="hidden" asp-for="PurchaseOrderItems[i].PurchaseOrderId" />
+                                            <select asp-for="PurchaseOrderItems[i].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateItemFromPaintItem(this)" asp-items="@(new SelectList(Model.PaintItems, "Id", "Name", Model.PurchaseOrderItems[i].PaintItemId))">
+                                                <option value="">Select Item</option>
+                                            </select>
+                                            <input type="hidden" asp-for="PurchaseOrderItems[i].SKU" class="sku-input" />
+                                            <input type="hidden" asp-for="PurchaseOrderItems[i].Description" class="description-input" />
+                                        </td>
+                                        <td class="col-qty-ordered">
+                                            <input asp-for="PurchaseOrderItems[i].QuantityOrdered" type="number" step="0.01" class="form-control form-control-sm qty-ordered" onchange="calculatePurchaseOrderLine(this)" />
+                                        </td>
+                                        <td class="col-qty-received">
+                                            <input asp-for="PurchaseOrderItems[i].QuantityReceived" type="number" step="0.01" class="form-control form-control-sm qty-received" readonly />
+                                        </td>
+                                        <td class="col-unit-cost">
+                                            <input asp-for="PurchaseOrderItems[i].UnitCost" type="number" step="0.01" class="form-control form-control-sm unit-cost" onchange="calculatePurchaseOrderLine(this)" />
+                                        </td>
+                                        <td class="col-discount">
+                                            <input asp-for="PurchaseOrderItems[i].DiscountPercent" type="number" step="0.01" class="form-control form-control-sm discount-percent" onchange="calculatePurchaseOrderLine(this)" />
+                                        </td>
+                                        <td class="col-tax">
+                                            <input asp-for="PurchaseOrderItems[i].TaxPercent" type="number" step="0.01" class="form-control form-control-sm tax-percent" onchange="calculatePurchaseOrderLine(this)" />
+                                        </td>
+                                        <td class="col-total">
+                                            <input asp-for="PurchaseOrderItems[i].LineTotal" type="number" step="0.01" class="form-control form-control-sm line-total" readonly />
+                                        </td>
+                                        <td class="col-action">
+                                            <button type="button" class="btn-icon btn-danger" onclick="removePurchaseOrderItem(this)">
+                                                <i class="icon-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Summary</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="summary-row">
+                            <label>Subtotal</label>
+                            <input asp-for="Subtotal" type="number" step="0.01" class="form-control summary-input" readonly />
+                        </div>
+                        <div class="summary-row">
+                            <label>Discount Amount</label>
+                            <input asp-for="DiscountAmount" type="number" step="0.01" class="form-control summary-input" readonly />
+                        </div>
+                        <div class="summary-row">
+                            <label>Tax Amount</label>
+                            <input asp-for="TaxAmount" type="number" step="0.01" class="form-control summary-input" readonly />
+                        </div>
+                        <div class="summary-row">
+                            <label>Shipping Cost</label>
+                            <input asp-for="ShippingCost" type="number" step="0.01" class="form-control summary-input" onchange="calculatePurchaseOrderTotal()" />
+                        </div>
+                        <div class="summary-row">
+                            <label>Amount Received</label>
+                            <input asp-for="AmountReceived" type="number" step="0.01" class="form-control summary-input" readonly />
+                        </div>
+                        <div class="summary-row summary-total">
+                            <label>Total Amount</label>
+                            <input asp-for="TotalAmount" type="number" step="0.01" class="form-control summary-input" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Notes</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="InternalNotes">Internal Notes</label>
+                            <textarea asp-for="InternalNotes" class="form-control" rows="3" placeholder="Enter internal notes"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="VendorNotes">Vendor Notes</label>
+                            <textarea asp-for="VendorNotes" class="form-control" rows="3" placeholder="Enter notes for vendor"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="bill-sidebar">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Status</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Current Status</label>
+                            <input type="text" class="form-control" value="@Model.Status" readonly />
+                        </div>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" checked="@Model.IsApproved" disabled />
+                                Approved
+                            </label>
+                        </div>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" checked="@Model.IsCancelled" disabled />
+                                Cancelled
+                            </label>
+                        </div>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" checked="@Model.IsFullyReceived" disabled />
+                                Fully Received
+                            </label>
+                        </div>
+                        <p class="text-muted small mt-2">Status is automatically updated based on actions (approval, receipts, cancellation)</p>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Quick Actions</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions-list">
+                            <button type="submit" form="poForm" class="btn btn-block btn-primary">
+                                <i class="icon-save"></i> Save Changes
+                            </button>
+                            <a asp-action="Cancel" asp-route-id="@Model.Id" class="btn btn-block btn-warning">
+                                <i class="icon-x"></i> Cancel
+                            </a>
+                            <a asp-action="ReceiveItems" asp-route-id="@Model.Id" class="btn btn-block btn-outline-secondary">
+                                <i class="icon-download"></i> Receive Items
+                            </a>
+                            <a asp-controller="Bill" asp-action="CreateFromPO" asp-route-purchaseOrderId="@Model.Id" class="btn btn-block btn-outline-secondary">
+                                <i class="icon-file-text"></i> View Bill
+                            </a>
+                            <a asp-action="Email" asp-route-id="@Model.Id" class="btn btn-block btn-outline-secondary">
+                                <i class="icon-mail"></i> Email PO
+                            </a>
+                            <a href="#" class="btn btn-block btn-outline-secondary">
+                                <i class="icon-printer"></i> Print PO
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    let purchaseOrderItemIndex = @Model.PurchaseOrderItems.Count;
+
+    function addPurchaseOrderItem() {
+        const container = document.getElementById('purchaseOrderItemsContainer');
+        const index = purchaseOrderItemIndex++;
+
+        const paintItemsOptions = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaintItems));
+
+        let optionsHtml = '<option value="">Select Item</option>';
+        paintItemsOptions.forEach(item => {
+            optionsHtml += `<option value="${item.Id}" data-sku="${item.SKU}" data-name="${item.Name}" data-cost="${item.UnitCost}" data-unit="${item.Unit}">${item.Name} (${item.SKU})</option>`;
+        });
+
+        const itemHtml = `
+            <tr class="item-row" data-index="${index}">
+                <td class="col-item">
+                    <input type="hidden" name="PurchaseOrderItems[${index}].Id" value="0" />
+                    <input type="hidden" name="PurchaseOrderItems[${index}].PurchaseOrderId" value="@Model.Id" />
+                    <select name="PurchaseOrderItems[${index}].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateItemFromPaintItem(this)">
+                        ${optionsHtml}
+                    </select>
+                    <input type="hidden" name="PurchaseOrderItems[${index}].SKU" class="sku-input" value="" />
+                    <input type="hidden" name="PurchaseOrderItems[${index}].Description" class="description-input" value="" />
+                </td>
+                <td class="col-qty-ordered">
+                    <input type="number" name="PurchaseOrderItems[${index}].QuantityOrdered" step="0.01" class="form-control form-control-sm qty-ordered" value="0" onchange="calculatePurchaseOrderLine(this)" />
+                </td>
+                <td class="col-qty-received">
+                    <input type="number" name="PurchaseOrderItems[${index}].QuantityReceived" step="0.01" class="form-control form-control-sm qty-received" value="0" readonly />
+                </td>
+                <td class="col-unit-cost">
+                    <input type="number" name="PurchaseOrderItems[${index}].UnitCost" step="0.01" class="form-control form-control-sm unit-cost" value="0" onchange="calculatePurchaseOrderLine(this)" />
+                </td>
+                <td class="col-discount">
+                    <input type="number" name="PurchaseOrderItems[${index}].DiscountPercent" step="0.01" class="form-control form-control-sm discount-percent" value="0" onchange="calculatePurchaseOrderLine(this)" />
+                </td>
+                <td class="col-tax">
+                    <input type="number" name="PurchaseOrderItems[${index}].TaxPercent" step="0.01" class="form-control form-control-sm tax-percent" value="0" onchange="calculatePurchaseOrderLine(this)" />
+                </td>
+                <td class="col-total">
+                    <input type="number" name="PurchaseOrderItems[${index}].LineTotal" step="0.01" class="form-control form-control-sm line-total" value="0" readonly />
+                </td>
+                <td class="col-action">
+                    <button type="button" class="btn-icon btn-danger" onclick="removePurchaseOrderItem(this)">
+                        <i class="icon-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+
+        container.insertAdjacentHTML('beforeend', itemHtml);
+    }
+
+    function removePurchaseOrderItem(button) {
+        const itemRow = button.closest('.item-row');
+        itemRow.remove();
+        calculatePurchaseOrderTotal();
+    }
+
+    function removeLastPurchaseOrderItemRow() {
+        const container = document.getElementById('purchaseOrderItemsContainer');
+        const rows = container.querySelectorAll('.item-row');
+        if (!rows.length) {
+            return;
+        }
+
+        rows[rows.length - 1].remove();
+        calculatePurchaseOrderTotal();
+    }
+
+    function updateItemFromPaintItem(select) {
+        const itemRow = select.closest('.item-row');
+        const selectedOption = select.options[select.selectedIndex];
+        const skuInput = itemRow.querySelector('.sku-input');
+        const descriptionInput = itemRow.querySelector('.description-input');
+        const unitCostInput = itemRow.querySelector('.unit-cost');
+
+        if (selectedOption.value) {
+            skuInput.value = selectedOption.dataset.sku || '';
+            descriptionInput.value = selectedOption.dataset.name || '';
+            unitCostInput.value = selectedOption.dataset.cost || 0;
+        } else {
+            skuInput.value = '';
+            descriptionInput.value = '';
+            unitCostInput.value = 0;
+        }
+
+        calculatePurchaseOrderLine(select);
+    }
+
+    function calculatePurchaseOrderLine(input) {
+        const itemRow = input.closest('.item-row');
+        const qtyOrdered = parseFloat(itemRow.querySelector('.qty-ordered').value) || 0;
+        const unitCost = parseFloat(itemRow.querySelector('.unit-cost').value) || 0;
+        const discountPercent = parseFloat(itemRow.querySelector('.discount-percent').value) || 0;
+        const taxPercent = parseFloat(itemRow.querySelector('.tax-percent').value) || 0;
+
+        const subtotal = qtyOrdered * unitCost;
+        const discountAmount = subtotal * (discountPercent / 100);
+        const afterDiscount = subtotal - discountAmount;
+        const taxAmount = afterDiscount * (taxPercent / 100);
+        const lineTotal = afterDiscount + taxAmount;
+
+        itemRow.querySelector('.line-total').value = lineTotal.toFixed(2);
+        itemRow.querySelector('.discount-percent').value = discountPercent.toFixed(2);
+        itemRow.querySelector('.tax-percent').value = taxPercent.toFixed(2);
+
+        calculatePurchaseOrderTotal();
+    }
+
+    function calculatePurchaseOrderTotal() {
+        const lineTotals = document.querySelectorAll('.line-total');
+        let subtotal = 0;
+        let totalDiscount = 0;
+        let totalTax = 0;
+
+        lineTotals.forEach(input => {
+            const itemRow = input.closest('.item-row');
+            const qtyOrdered = parseFloat(itemRow.querySelector('.qty-ordered').value) || 0;
+            const unitCost = parseFloat(itemRow.querySelector('.unit-cost').value) || 0;
+            const discountPercent = parseFloat(itemRow.querySelector('.discount-percent').value) || 0;
+            const taxPercent = parseFloat(itemRow.querySelector('.tax-percent').value) || 0;
+
+            const lineSubtotal = qtyOrdered * unitCost;
+            const lineDiscount = lineSubtotal * (discountPercent / 100);
+            const afterDiscount = lineSubtotal - lineDiscount;
+            const lineTax = afterDiscount * (taxPercent / 100);
+
+            subtotal += lineSubtotal;
+            totalDiscount += lineDiscount;
+            totalTax += lineTax;
+        });
+
+        const shippingCost = parseFloat(document.querySelector('#ShippingCost').value) || 0;
+        const totalAmount = subtotal - totalDiscount + totalTax + shippingCost;
+
+        document.querySelector('#Subtotal').value = subtotal.toFixed(2);
+        document.querySelector('#DiscountAmount').value = totalDiscount.toFixed(2);
+        document.querySelector('#TaxAmount').value = totalTax.toFixed(2);
+        document.querySelector('#TotalAmount').value = totalAmount.toFixed(2);
+        document.querySelector('#AmountReceived').value = totalAmount.toFixed(2);
+    }
+
+    // Initialize calculations on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        calculatePurchaseOrderTotal();
+
+        // Set minimum date to today for date inputs to prevent backdating
+        const today = new Date().toISOString().split('T')[0];
+        const orderDateInput = document.getElementById('orderDate');
+        const expectedDeliveryDateInput = document.getElementById('expectedDeliveryDate');
+
+        if (orderDateInput) {
+            orderDateInput.min = today;
+        }
+        if (expectedDeliveryDateInput) {
+            expectedDeliveryDateInput.min = today;
+        }
+    });
+
+    // Calculate totals before form submission
+    document.querySelector('form').addEventListener('submit', function(e) {
+        calculatePurchaseOrderTotal();
+    });
+</script>

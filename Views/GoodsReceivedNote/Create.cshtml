@@ -1,0 +1,340 @@
+@model PaintERP.Models.ViewModels.GoodsReceivedNoteFormViewModel
+@{
+    ViewData["Title"] = "New Goods Received Note";
+}
+
+<link rel="stylesheet" href="~/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">New Goods Received Note</h1>
+            <p class="page-subtitle">Record incoming inventory from purchase order</p>
+        </div>
+        <div class="header-right">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="icon-arrow-left"></i>
+                Back to GRNs
+            </a>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post" class="bill-form">
+        <div asp-validation-summary="All" class="validation-summary"></div>
+        <div class="bill-layout">
+            <div class="bill-main">
+                <!-- GRN Information -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">GRN Information</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="PurchaseOrderId" class="required">Purchase Order</label>
+                                <select asp-for="PurchaseOrderId" class="form-control" id="poSelect" onchange="loadPurchaseOrderItems()">
+                                    <option value="">Select Purchase Order</option>
+                                    @foreach (var po in Model.PurchaseOrders)
+                                    {
+                                        <option value="@po.Id" data-vendor-id="@po.VendorId" data-warehouse-id="@po.WarehouseId">@po.PONumber - @po.VendorName (@po.OrderDate.ToString("MM/dd/yyyy"))</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="GRNNumber">GRN Number</label>
+                                <input asp-for="GRNNumber" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="GRNDate" class="required">GRN Date</label>
+                                <input asp-for="GRNDate" type="date" class="form-control" />
+                                <span asp-validation-for="GRNDate" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="WarehouseId" class="required">Warehouse</label>
+                                <select asp-for="WarehouseId" class="form-control" asp-items="@(new SelectList(Model.Warehouses, "Id", "Name"))">
+                                    <option value="">Select Warehouse</option>
+                                </select>
+                                <span asp-validation-for="WarehouseId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Vendor</label>
+                                <input type="text" class="form-control" value="@Model.VendorName" readonly />
+                                <input type="hidden" asp-for="VendorId" />
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="ReferenceNumber">Reference Number</label>
+                                <input asp-for="ReferenceNumber" class="form-control" readonly />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRN Items -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Items to Receive</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="items-grid-scroll">
+                        <table class="items-table items-table-grn" id="grnItemsTable">
+                            <colgroup>
+                                <col style="width:90px">
+                                <col>
+                                <col style="width:70px">
+                                <col style="width:85px">
+                                <col style="width:140px">
+                                <col style="width:110px">
+                                <col style="width:95px">
+                                <col style="width:95px">
+                                <col style="width:100px">
+                                <col style="width:100px">
+                                <col style="width:120px">
+                                <col style="width:100px">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Description</th>
+                                    <th>Unit</th>
+                                    <th>Ordered</th>
+                                    <th>Previously Received</th>
+                                    <th>Remaining</th>
+                                    <th class="required">To Receive</th>
+                                    <th>Unit Cost</th>
+                                    <th>Line Total</th>
+                                    <th>Batch #</th>
+                                    <th>Expiry</th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.GoodsReceivedNoteItems.Count; i++)
+                                {
+                                    <tr class="grn-item-row" data-index="@i">
+                                        <td>
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].Id" />
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].PurchaseOrderItemId" />
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].SKU" />
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].Description" />
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].PaintItemId" />
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].QuantityOrdered" />
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].QuantityPreviouslyReceived" />
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].QuantityRemaining" class="qty-remaining" />
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].Unit" />
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].UnitCost" class="unit-cost" />
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].DiscountPercent" />
+                                            <input type="hidden" asp-for="@Model.GoodsReceivedNoteItems[i].TaxPercent" />
+                                            @Model.GoodsReceivedNoteItems[i].SKU
+                                        </td>
+                                        <td>@Model.GoodsReceivedNoteItems[i].Description</td>
+                                        <td>@Model.GoodsReceivedNoteItems[i].Unit</td>
+                                        <td>@Model.GoodsReceivedNoteItems[i].QuantityOrdered.ToString("N2")</td>
+                                        <td>@Model.GoodsReceivedNoteItems[i].QuantityPreviouslyReceived.ToString("N2")</td>
+                                        <td>@Model.GoodsReceivedNoteItems[i].QuantityRemaining.ToString("N2")</td>
+                                        <td>
+                                            <input asp-for="@Model.GoodsReceivedNoteItems[i].QuantityReceived" type="number" step="0.01" min="0" class="form-control form-control-sm qty-received" onchange="calculateLineTotal(@i)" />
+                                        </td>
+                                        <td>@Model.GoodsReceivedNoteItems[i].UnitCost.ToString("C")</td>
+                                        <td>
+                                            <input asp-for="@Model.GoodsReceivedNoteItems[i].LineTotal" type="number" step="0.01" class="form-control form-control-sm line-total" readonly />
+                                        </td>
+                                        <td>
+                                            <input asp-for="@Model.GoodsReceivedNoteItems[i].BatchNumber" class="form-control form-control-sm" />
+                                        </td>
+                                        <td>
+                                            <input asp-for="@Model.GoodsReceivedNoteItems[i].ExpiryDate" type="date" class="form-control form-control-sm" />
+                                        </td>
+                                        <td>
+                                            <input asp-for="@Model.GoodsReceivedNoteItems[i].Location" class="form-control form-control-sm" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        </div>
+                        @if (Model.GoodsReceivedNoteItems.Count == 0)
+                        {
+                            <div class="empty-state">
+                                <p>Select a Purchase Order to load items for receiving</p>
+                                <p>Debug: PurchaseOrderId = @Model.PurchaseOrderId, Items Count = @Model.GoodsReceivedNoteItems.Count</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="debug-info">
+                                <p>Debug: Loaded @Model.GoodsReceivedNoteItems.Count items for PO @Model.PONumber</p>
+                                <p>Debug: Subtotal = @Model.Subtotal, Discount = @Model.DiscountAmount, Tax = @Model.TaxAmount, Total = @Model.TotalAmount</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Notes</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="InternalNotes">Internal Notes</label>
+                            <textarea asp-for="InternalNotes" class="form-control" rows="2" readonly></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="VendorNotes">Vendor Notes</label>
+                            <textarea asp-for="VendorNotes" class="form-control" rows="2" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bill-sidebar">
+                <!-- Summary -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Summary</div>
+                    </div>
+                    <div class="card-body">
+                        <input type="hidden" asp-for="Subtotal" id="Subtotal" />
+                        <input type="hidden" asp-for="DiscountAmount" id="DiscountAmount" />
+                        <input type="hidden" asp-for="TaxAmount" id="TaxAmount" />
+                        <input type="hidden" asp-for="TotalAmount" id="TotalAmount" />
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span id="subtotalDisplay">@Model.Subtotal.ToString("C")</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount</span>
+                            <span id="discountDisplay">@Model.DiscountAmount.ToString("C")</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax</span>
+                            <span id="taxDisplay">@Model.TaxAmount.ToString("C")</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span id="totalDisplay">@Model.TotalAmount.ToString("C")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Actions</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions-list">
+                            <button type="submit" class="btn btn-block btn-primary">
+                                <i class="icon-save"></i> Save GRN
+                            </button>
+                            <a asp-action="Index" class="btn btn-block btn-outline-secondary">
+                                <i class="icon-x"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+    function calculateLineTotal(index) {
+        const row = document.querySelector(`tr[data-index="${index}"]`);
+        if (!row) return;
+
+        const qtyReceived = parseFloat(row.querySelector('.qty-received')?.value) || 0;
+        const unitCost = parseFloat(row.querySelector('.unit-cost')?.value) || 0;
+        const qtyRemaining = parseFloat(row.querySelector('.qty-remaining')?.value) || 0;
+
+        // Validate quantity doesn't exceed remaining
+        if (qtyReceived > qtyRemaining) {
+            alert(`Received quantity (${qtyReceived}) cannot exceed remaining quantity (${qtyRemaining})`);
+            row.querySelector('.qty-received').value = qtyRemaining;
+            return;
+        }
+
+        const lineTotal = qtyReceived * unitCost;
+        row.querySelector('.line-total').value = lineTotal.toFixed(2);
+
+        calculateTotals();
+    }
+
+    function calculateTotals() {
+        let subtotal = 0;
+        const rows = document.querySelectorAll('.grn-item-row');
+
+        rows.forEach(row => {
+            const lineTotal = parseFloat(row.querySelector('.line-total')?.value) || 0;
+            subtotal += lineTotal;
+        });
+
+        document.getElementById('subtotalDisplay').textContent = subtotal.toFixed(2);
+        document.getElementById('totalDisplay').textContent = subtotal.toFixed(2);
+
+        // Update hidden fields for form submission
+        document.getElementById('Subtotal').value = subtotal.toFixed(2);
+        document.getElementById('DiscountAmount').value = 0;
+        document.getElementById('TaxAmount').value = 0;
+        document.getElementById('TotalAmount').value = subtotal.toFixed(2);
+    }
+
+    function loadPurchaseOrderItems() {
+        const poSelect = document.getElementById('poSelect');
+        const poId = poSelect.value;
+        
+        if (poId) {
+            window.location.href = '@Url.Action("Create")?purchaseOrderId=' + poId;
+        }
+    }
+
+    // Initialize calculations on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const rows = document.querySelectorAll('.grn-item-row');
+        rows.forEach((row, index) => {
+            calculateLineTotal(index);
+        });
+
+        // If PO is already selected, ensure items are displayed
+        const poSelect = document.getElementById('poSelect');
+        if (poSelect && poSelect.value) {
+            // Items should already be loaded server-side
+            // Just ensure the vendor and warehouse fields are populated
+            const selectedOption = poSelect.options[poSelect.selectedIndex];
+            if (selectedOption) {
+                const vendorId = selectedOption.getAttribute('data-vendor-id');
+                const warehouseId = selectedOption.getAttribute('data-warehouse-id');
+                // These are handled server-side, no need to set them here
+            }
+        }
+
+        // Initialize totals from server-side values
+        const serverSubtotal = @Model.Subtotal;
+        const serverDiscount = @Model.DiscountAmount;
+        const serverTax = @Model.TaxAmount;
+        const serverTotal = @Model.TotalAmount;
+
+        document.getElementById('subtotalDisplay').textContent = serverSubtotal.toFixed(2);
+        document.getElementById('discountDisplay').textContent = serverDiscount.toFixed(2);
+        document.getElementById('taxDisplay').textContent = serverTax.toFixed(2);
+        document.getElementById('totalDisplay').textContent = serverTotal.toFixed(2);
+
+        // Initialize hidden fields
+        document.getElementById('Subtotal').value = serverSubtotal.toFixed(2);
+        document.getElementById('DiscountAmount').value = serverDiscount.toFixed(2);
+        document.getElementById('TaxAmount').value = serverTax.toFixed(2);
+        document.getElementById('TotalAmount').value = serverTotal.toFixed(2);
+    });
+
+    // Calculate totals before form submission
+    document.querySelector('form').addEventListener('submit', function(e) {
+        calculateTotals();
+    });
+    </script>
+}

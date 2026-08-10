@@ -1,0 +1,168 @@
+@model PaintERP.Models.Entities.CustomerPaymentInvoice
+@{
+    ViewData["Title"] = $"Payment Receipt {Model.CustomerPayment?.PaymentNumber}";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .receipt-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        @@media print {
+            .print-button { display: none; }
+            body { padding: 0; }
+            .receipt-container { max-width: 100%; }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button" onclick="window.print()">Print Receipt</button>
+
+    <div class="receipt-container">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px; border-bottom: 3px solid #333; padding-bottom: 20px;">
+            <tr>
+                <td width="50%" valign="top">
+                    <h1 style="font-size: 24px; color: #333; margin: 0 0 5px 0;">Unicorp Bissonet</h1>
+                    <p style="margin: 2px 0; font-size: 11px; color: #666;">123 Industrial Boulevard</p>
+                    <p style="margin: 2px 0; font-size: 11px; color: #666;">Paint City, PC 12345</p>
+                    <p style="margin: 2px 0; font-size: 11px; color: #666;">Phone: (555) 123-4567</p>
+                    <p style="margin: 2px 0; font-size: 11px; color: #666;">Email: info@unicorpbissonet.com</p>
+                </td>
+                <td width="50%" valign="top" align="right">
+                    <h2 style="font-size: 28px; color: #27ae60; margin: 0 0 10px 0;">PAYMENT RECEIPT</h2>
+                    <span style="background: #27ae60; color: white; padding: 4px 12px; font-size: 10px; font-weight: bold; text-transform: uppercase;">@Model.CustomerPayment?.Status</span>
+                </td>
+            </tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
+            <tr>
+                <td align="right">
+                    <span style="font-weight: bold; color: #333;">Receipt #:</span> @Model.CustomerPayment?.PaymentNumber<br />
+                    <span style="font-weight: bold; color: #333;">Payment Date:</span> @Model.CustomerPayment?.PaymentDate.ToString("MMMM dd, yyyy")<br />
+                    <span style="font-weight: bold; color: #333;">Reference:</span> @Model.CustomerPayment?.ReferenceNumber
+                </td>
+            </tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
+            <tr>
+                <td width="50%" valign="top" style="padding-right: 30px;">
+                    <h3 style="font-size: 12px; color: #333; margin: 0 0 10px 0; text-transform: uppercase;">Received From</h3>
+                    <strong>@Model.CustomerPayment?.Customer?.BusinessName</strong><br />
+                    @if (!string.IsNullOrEmpty(Model.CustomerPayment?.Customer?.BillingStreetAddress))
+                    {
+                        @Model.CustomerPayment.Customer.BillingStreetAddress<br />
+                    }
+                    @if (!string.IsNullOrEmpty(Model.CustomerPayment?.Customer?.BillingCity))
+                    {
+                        @Model.CustomerPayment.Customer.BillingCity<br />
+                    }
+                    @if (!string.IsNullOrEmpty(Model.CustomerPayment?.Customer?.BillingState))
+                    {
+                        @Model.CustomerPayment.Customer.BillingState<br />
+                    }
+                    @if (!string.IsNullOrEmpty(Model.CustomerPayment?.Customer?.BillingZipCode))
+                    {
+                        @Model.CustomerPayment.Customer.BillingZipCode<br />
+                    }
+                </td>
+                <td width="50%" valign="top" style="padding-left: 10px;">
+                    <h3 style="font-size: 12px; color: #333; margin: 0 0 10px 0; text-transform: uppercase;">Payment Details</h3>
+                    <span style="font-weight: bold; color: #333;">Payment Method:</span> @Model.CustomerPayment?.PaymentMethod<br />
+                    <span style="font-weight: bold; color: #333;">Deposit Account:</span> @Model.CustomerPayment?.DepositAccount<br />
+                    @if (!string.IsNullOrEmpty(Model.CustomerPayment?.Notes))
+                    {
+                        <span style="font-weight: bold; color: #333;">Notes:</span> @Model.CustomerPayment.Notes
+                    }
+                </td>
+            </tr>
+        </table>
+
+        <table width="100%" cellpadding="10" cellspacing="0" border="1" style="border-collapse: collapse; margin-bottom: 20px; border: 1px solid #ddd;">
+            <tr style="background: #333; color: white;">
+                <th style="text-align: left; font-size: 10px; padding: 10px;">Invoice #</th>
+                <th style="text-align: left; font-size: 10px; padding: 10px;">Invoice Date</th>
+                <th style="text-align: right; font-size: 10px; padding: 10px; width: 100px;">Invoice Amount</th>
+                <th style="text-align: right; font-size: 10px; padding: 10px; width: 100px;">Amount Due</th>
+                <th style="text-align: right; font-size: 10px; padding: 10px; width: 100px;">Payment Applied</th>
+                <th style="text-align: right; font-size: 10px; padding: 10px; width: 100px;">Remaining Balance</th>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+                <td style="padding: 10px; font-size: 11px;">@Model.SalesInvoice?.InvoiceNumber</td>
+                <td style="padding: 10px; font-size: 11px;">@Model.SalesInvoice?.InvoiceDate.ToString("MMMM dd, yyyy")</td>
+                <td style="padding: 10px; font-size: 11px; text-align: right;">@Model.InvoiceAmount.ToString("C")</td>
+                <td style="padding: 10px; font-size: 11px; text-align: right;">@Model.AmountDue.ToString("C")</td>
+                <td style="padding: 10px; font-size: 11px; text-align: right; font-weight: bold; color: #27ae60;">@Model.PaymentApplied.ToString("C")</td>
+                <td style="padding: 10px; font-size: 11px; text-align: right; font-weight: bold; color: #e74c3c;">@Model.RemainingBalance.ToString("C")</td>
+            </tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td>&nbsp;</td>
+                <td width="300" valign="top" align="right">
+                    <table width="300" cellpadding="8" cellspacing="0" border="0">
+                        <tr>
+                            <td align="left" style="font-size: 11px; color: #666;">Total Payment Received</td>
+                            <td align="right" style="font-size: 14px; font-weight: bold; color: #27ae60;">@Model.CustomerPayment?.AmountReceived.ToString("C")</td>
+                        </tr>
+                        <tr>
+                            <td align="left" style="font-size: 11px; color: #666;">Total Applied to Invoices</td>
+                            <td align="right" style="font-size: 11px; font-weight: bold; color: #333;">@Model.CustomerPayment?.TotalApplied.ToString("C")</td>
+                        </tr>
+                        <tr>
+                            <td align="left" style="font-size: 11px; color: #666;">Unapplied Amount</td>
+                            <td align="right" style="font-size: 11px; font-weight: bold; color: #333;">@Model.CustomerPayment?.UnappliedAmount.ToString("C")</td>
+                        </tr>
+                        <tr style="background: #27ae60; color: white;">
+                            <td align="left" style="font-size: 13px; font-weight: bold; padding: 12px 8px;">TOTAL RECEIPT AMOUNT</td>
+                            <td align="right" style="font-size: 16px; font-weight: bold; padding: 12px 8px;">@Model.PaymentApplied.ToString("C")</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <div style="margin: 20px 0; padding: 15px; background: #f5f5f5; border-left: 4px solid #27ae60;">
+            <h3 style="font-size: 11px; color: #333; margin: 0 0 8px 0; text-transform: uppercase;">Payment Summary</h3>
+            <p style="margin: 5px 0; font-size: 11px;">This receipt confirms payment of <strong>@Model.PaymentApplied.ToString("C")</strong> has been applied to invoice <strong>@Model.SalesInvoice?.InvoiceNumber</strong>.</p>
+            <p style="margin: 5px 0; font-size: 11px;">Remaining balance on this invoice: <strong>@Model.RemainingBalance.ToString("C")</strong></p>
+        </div>
+
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; font-size: 10px; color: #999;">
+            <p style="margin: 5px 0;">Thank you for your payment!</p>
+            <p style="margin: 5px 0;">For questions regarding this payment, please contact us at (555) 123-4567 or info@usapainterp.com</p>
+            <p style="margin: 5px 0;">Generated on @DateTime.UtcNow.ToString("MMMM dd, yyyy HH:mm") UTC</p>
+        </div>
+    </div>
+</body>
+</html>

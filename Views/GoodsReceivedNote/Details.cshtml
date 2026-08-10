@@ -1,0 +1,215 @@
+@model PaintERP.Models.Entities.GoodsReceivedNote
+@{
+    ViewData["Title"] = $"GRN {Model.GRNNumber}";
+}
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">GRN @Model.GRNNumber</h1>
+            <p class="page-subtitle">Goods Received Note Details</p>
+        </div>
+        <div class="header-right">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="icon-arrow-left"></i>
+                Back to GRNs
+            </a>
+            @if (!Model.IsPosted)
+            {
+                <form asp-action="Post" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success" onclick="return confirm('Post this GRN to update inventory?');">
+                        <i class="icon-check"></i>
+                        Post GRN
+                    </button>
+                </form>
+            }
+            @if (Model.IsPosted && !Model.ConvertedBillId.HasValue)
+            {
+                <a asp-action="ConvertToBill" asp-route-id="@Model.Id" class="btn btn-primary">
+                    <i class="icon-file-text"></i>
+                    Convert to Bill
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">GRN Information</div>
+            <div class="card-actions">
+                <span class="status-badge status-@Model.Status.ToLower()">@Model.Status</span>
+                @if (Model.IsPosted)
+                {
+                    <span class="badge badge-success">Posted</span>
+                }
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="details-grid">
+                <div class="detail-item">
+                    <label>GRN Number</label>
+                    <span>@Model.GRNNumber</span>
+                </div>
+                <div class="detail-item">
+                    <label>PO Number</label>
+                    <span>@Model.PurchaseOrder?.PONumber</span>
+                </div>
+                <div class="detail-item">
+                    <label>GRN Date</label>
+                    <span>@Model.GRNDate.ToString("MM/dd/yyyy")</span>
+                </div>
+                <div class="detail-item">
+                    <label>Vendor</label>
+                    <span>@Model.Vendor?.BusinessName</span>
+                </div>
+                <div class="detail-item">
+                    <label>Warehouse</label>
+                    <span>@Model.Warehouse?.Name</span>
+                </div>
+                <div class="detail-item">
+                    <label>Reference Number</label>
+                    <span>@Model.ReferenceNumber ?? "-"</span>
+                </div>
+                <div class="detail-item">
+                    <label>Received Date</label>
+                    <span>@Model.ReceivedDate?.ToString("MM/dd/yyyy") ?? "-"</span>
+                </div>
+                <div class="detail-item">
+                    <label>Received By</label>
+                    <span>@Model.ReceivedBy ?? "-"</span>
+                </div>
+                <div class="detail-item">
+                    <label>Posted Date</label>
+                    <span>@Model.PostedDate?.ToString("MM/dd/yyyy") ?? "-"</span>
+                </div>
+                <div class="detail-item">
+                    <label>Posted By</label>
+                    <span>@Model.PostedBy ?? "-"</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">Received Items</div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Description</th>
+                            <th>Unit</th>
+                            <th>Ordered</th>
+                            <th>Previously Received</th>
+                            <th>This Receipt</th>
+                            <th>Total Received</th>
+                            <th>Unit Cost</th>
+                            <th>Line Total</th>
+                            <th>Batch #</th>
+                            <th>Expiry</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.GoodsReceivedNoteItems)
+                        {
+                            <tr>
+                                <td>@item.SKU</td>
+                                <td>@item.Description</td>
+                                <td>@item.Unit</td>
+                                <td>@item.QuantityOrdered.ToString("N2")</td>
+                                <td>@item.QuantityPreviouslyReceived.ToString("N2")</td>
+                                <td><strong>@item.QuantityReceived.ToString("N2")</strong></td>
+                                <td>@(item.QuantityPreviouslyReceived + item.QuantityReceived).ToString("N2")</td>
+                                <td>@item.UnitCost.ToString("C")</td>
+                                <td>@item.LineTotal.ToString("C")</td>
+                                <td>@item.BatchNumber ?? "-"</td>
+                                <td>@item.ExpiryDate?.ToString("MM/dd/yyyy") ?? "-"</td>
+                                <td>@item.Location ?? "-"</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">Financial Summary</div>
+        </div>
+        <div class="card-body">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span>@Model.Subtotal.ToString("C")</span>
+            </div>
+            <div class="summary-row">
+                <span>Discount</span>
+                <span>@Model.DiscountAmount.ToString("C")</span>
+            </div>
+            <div class="summary-row">
+                <span>Tax</span>
+                <span>@Model.TaxAmount.ToString("C")</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total Amount</span>
+                <span>@Model.TotalAmount.ToString("C")</span>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.InternalNotes) || !string.IsNullOrEmpty(Model.VendorNotes))
+    {
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title">Notes</div>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(Model.InternalNotes))
+                {
+                    <div class="note-section">
+                        <label>Internal Notes:</label>
+                        <p>@Model.InternalNotes</p>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.VendorNotes))
+                {
+                    <div class="note-section">
+                        <label>Vendor Notes:</label>
+                        <p>@Model.VendorNotes</p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">Audit Information</div>
+        </div>
+        <div class="card-body">
+            <div class="audit-grid">
+                <div class="audit-item">
+                    <label>Created</label>
+                    <span>@Model.CreatedAtUtc.ToString("MM/dd/yyyy HH:mm") UTC</span>
+                </div>
+                <div class="audit-item">
+                    <label>Created By</label>
+                    <span>@Model.CreatedBy</span>
+                </div>
+                <div class="audit-item">
+                    <label>Last Updated</label>
+                    <span>@Model.UpdatedAtUtc.ToString("MM/dd/yyyy HH:mm") UTC</span>
+                </div>
+                <div class="audit-item">
+                    <label>Updated By</label>
+                    <span>@Model.UpdatedBy</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,71 @@
+@model PaintERP.Models.Entities.Warehouse
+@{
+    ViewData["Title"] = "New Warehouse";
+}
+
+<link rel="stylesheet" href="~/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">New Warehouse</h1>
+            <p class="page-subtitle">Create a new warehouse location</p>
+        </div>
+        <div class="header-right">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="icon-arrow-left"></i>
+                Back to Warehouses
+            </a>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post" class="bill-form">
+        <div asp-validation-summary="All" class="validation-summary"></div>
+        <div class="bill-layout">
+            <div class="bill-main">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Warehouse Information</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="CompanyId" class="required">Company</label>
+                            <select asp-for="CompanyId" class="form-control" asp-items="@(new SelectList(ViewBag.Companies, "Id", "Name"))">
+                                <option value="">Select Company</option>
+                            </select>
+                            <span asp-validation-for="CompanyId" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Name" class="required">Warehouse Name</label>
+                            <input asp-for="Name" class="form-control" placeholder="Enter warehouse name" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Location" class="required">Location</label>
+                            <input asp-for="Location" class="form-control" placeholder="Enter warehouse location" />
+                            <span asp-validation-for="Location" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bill-sidebar">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Quick Actions</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions-list">
+                            <button type="submit" class="btn btn-block btn-primary">
+                                <i class="icon-save"></i> Save Warehouse
+                            </button>
+                            <a asp-action="Index" class="btn btn-block btn-outline-secondary">
+                                <i class="icon-x"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

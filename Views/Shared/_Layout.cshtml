@@ -1,0 +1,410 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - Unicorp Bissonet</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/css/vendor.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/css/bill.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/css/item.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/css/pagination.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+</head>
+
+<body>
+
+    <div class="app-shell">
+
+        <aside class="sidebar">
+
+            <div class="sidebar-logo">
+
+                <img src="/images/logos/painterp-logo.svg" alt="Unicorp Bissonet" />
+
+                <span>SmartERP</span>
+
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <div class="nav-section open" data-nav-section>
+                    <button type="button" class="nav-section-toggle" data-nav-toggle>
+                        <div class="nav-section-info">
+                            <svg class="nav-section-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="4" width="6" height="6" rx="1" />
+                                <rect x="14" y="4" width="6" height="6" rx="1" />
+                                <rect x="4" y="14" width="6" height="6" rx="1" />
+                                <rect x="14" y="14" width="6" height="6" rx="1" />
+                            </svg>
+                            <div class="nav-section-copy">
+                                <span>Main Menu</span>
+                                <small>Core workflows</small>
+                            </div>
+                        </div>
+                        <svg class="chevron-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </button>
+                    <div class="nav-sublist">
+                        <a class="nav-link active" asp-controller="Home" asp-action="Dashboard">
+                            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 11l9-8 9 8" />
+                                <path d="M5.5 9.5V21h5.5v-5h3v5H18.5V9.5" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Dashboard</span>
+                                <span class="nav-hint">Executive view</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="Vendor" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="9" r="3" />
+                                <circle cx="17" cy="10" r="2.5" />
+                                <path d="M4 19c0-2.8 2.2-5 5-5h0.5" />
+                                <path d="M14.5 14h0.5c2.2 0 4 1.8 4 4v2" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Vendors</span>
+                                <span class="nav-hint">Suppliers & contracts</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="Customer" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="8" r="3.2" />
+                                <path d="M5 20c0-3.4 3-6 7-6s7 2.6 7 6" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Customers</span>
+                                <span class="nav-hint">Accounts & history</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="Item" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="4" width="16" height="16" rx="3" />
+                                <path d="M8 9h8M8 15h8M8 12h4" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Items & Formulas</span>
+                                <span class="nav-hint">SKUs & recipes</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="Warehouse" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 21h18" />
+                                <path d="M5 21V7l8-4 8 4v14" />
+                                <path d="M17 21v-8.5a2.5 2.5 0 0 0-5 0V21" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Warehouses</span>
+                                <span class="nav-hint">Storage locations</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="nav-section" data-nav-section>
+                    <button type="button" class="nav-section-toggle" data-nav-toggle>
+                        <div class="nav-section-info">
+                            <svg class="nav-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 8v5a3 3 0 0 1-3 3H6" />
+                                <path d="M3 16V8a3 3 0 0 1 3-3h4" />
+                                <path d="M7 21l-4-5 4-5" />
+                                <path d="M17 3l4 5-4 5" />
+                            </svg>
+                            <div class="nav-section-copy">
+                                <span>Operations</span>
+                                <small>Sourcing to fulfillment</small>
+                            </div>
+                        </div>
+                        <svg class="chevron-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </button>
+                    <div class="nav-sublist">
+                        <a class="nav-link" asp-controller="PurchaseOrder" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 3h11l4 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+                                <path d="M6 8h15" />
+                                <path d="M10 12h6" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Purchase</span>
+                                <span class="nav-hint">POs & receipts</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="GoodsReceivedNote" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 7h-9" />
+                                <path d="M14 17H5" />
+                                <circle cx="17" cy="17" r="3" />
+                                <circle cx="7" cy="7" r="3" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Goods Received</span>
+                                <span class="nav-hint">GRN & receipts</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="PaintProduction" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 3v18" />
+                                <path d="M6 7l6-4 6 4" />
+                                <path d="M6 17l6 4 6-4" />
+                                <path d="M6 7v10" />
+                                <path d="M18 7v10" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Production</span>
+                                <span class="nav-hint">Batches & runs</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="InventoryTransfer" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="14" rx="3" />
+                                <path d="M7 8h10M7 12h6" />
+                                <path d="M15 16h2" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Inventory</span>
+                                <span class="nav-hint">Transfers & stock</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="SalesInvoice" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M7 8h10M7 12h6M13 16h4" />
+                                <path d="M6 3h12a2 2 0 0 1 2 2v14l-4-2-4 2-4-2-4 2V5a2 2 0 0 1 2-2z" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Sales</span>
+                                <span class="nav-hint">Quotes & invoices</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="nav-section" data-nav-section>
+                    <button type="button" class="nav-section-toggle" data-nav-toggle>
+                        <div class="nav-section-info">
+                            <svg class="nav-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="5" width="20" height="14" rx="3" />
+                                <path d="M2 10h20" />
+                                <path d="M6 15h2" />
+                                <path d="M10 15h4" />
+                            </svg>
+                            <div class="nav-section-copy">
+                                <span>Finance</span>
+                                <small>Cash flow & controls</small>
+                            </div>
+                        </div>
+                        <svg class="chevron-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </button>
+                    <div class="nav-sublist">
+                        <a class="nav-link" asp-controller="Bill" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M8 3h8l3 4v14H5V3h3z" />
+                                <path d="M8 7h8" />
+                                <path d="M10 13h4" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Bills</span>
+                                <span class="nav-hint">AP register</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="VendorPayment" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18v6H3z" />
+                                <path d="M3 14h18v4H3z" />
+                                <path d="M7 10h.01M7 16h.01" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Vendor Payments</span>
+                                <span class="nav-hint">Payables</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="CustomerPayment" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 1v22" />
+                                <path d="M8 5h5a3 3 0 1 1 0 6H11" />
+                                <path d="M13 19H8a3 3 0 1 1 0-6h2" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Customer Payments</span>
+                                <span class="nav-hint">Receipts</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="StockLedger" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 3v18h18" />
+                                <path d="M7 13l4-4 3 3 5-6" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Stock Ledger</span>
+                                <span class="nav-hint">Valuation</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="nav-section" data-nav-section>
+                    <button type="button" class="nav-section-toggle" data-nav-toggle>
+                        <div class="nav-section-info">
+                            <svg class="nav-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 19h16" />
+                                <path d="M8 19V9" />
+                                <path d="M12 19V5" />
+                                <path d="M16 19v-7" />
+                            </svg>
+                            <div class="nav-section-copy">
+                                <span>Insights</span>
+                                <small>Analytics & trends</small>
+                            </div>
+                        </div>
+                        <svg class="chevron-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </button>
+                    <div class="nav-sublist">
+                        <a href="#" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 3v18h18" />
+                                <path d="M7 14l3-3 2 2 4-5" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Reports</span>
+                                <span class="nav-hint">Coming soon</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="nav-section open" data-nav-section>
+                    <button type="button" class="nav-section-toggle" data-nav-toggle>
+                        <div class="nav-section-info">
+                            <svg class="nav-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3" />
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
+                            </svg>
+                            <div class="nav-section-copy">
+                                <span>Administration</span>
+                                <small>Controls & governance</small>
+                            </div>
+                        </div>
+                        <svg class="chevron-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </button>
+                    <div class="nav-sublist">
+                        <a class="nav-link" asp-controller="Home" asp-action="UserManagement">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4z" />
+                                <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Users</span>
+                                <span class="nav-hint">Roles & access</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="PaintFormula" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 7h4l2 5-2 5H3z" />
+                                <path d="M13 7h4l2 5-2 5h-4z" />
+                                <path d="M8 7h8" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Paint Formulas</span>
+                                <span class="nav-hint">Blend library</span>
+                            </div>
+                        </a>
+                        <a class="nav-link" asp-controller="Settings" asp-action="Index">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 15.5a3.5 3.5 0 1 0-3.5-3.5 3.5 3.5 0 0 0 3.5 3.5z" />
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82l.02.08a2 2 0 1 1-3.8 0l.02-.08a1.65 1.65 0 0 0-.33-1.82A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33l-.08.02a2 2 0 0 1 0-3.8l.08.02a1.65 1.65 0 0 0 1.82-.33A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33l-.06.02a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82L10.31 2a2 2 0 0 1 3.38 0l-.02.08a1.65 1.65 0 0 0 .33 1.82 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33l.08-.02a2 2 0 0 1 0 3.8l-.08-.02a1.65 1.65 0 0 0-1.82.33A1.65 1.65 0 0 0 19.4 15z" />
+                            </svg>
+                            <div class="nav-text">
+                                <span class="nav-title">Settings</span>
+                                <span class="nav-hint">Preferences</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+        </aside>
+
+
+
+        <div class="main-area">
+
+            <header class="top-bar">
+
+                <form class="search">
+
+                    <input type="search" placeholder="Search vendors, customers, orders..." />
+
+                </form>
+
+                <div class="top-actions">
+
+                    <button class="ghost">Notifications</button>
+
+                    <button class="ghost">Company Switcher</button>
+
+                    <a asp-action="Logout" asp-controller="Home" class="ghost danger">Logout</a>
+
+                    <div class="avatar">JD</div>
+
+                </div>
+
+            </header>
+
+
+
+            <main>
+
+                @RenderBody()
+
+            </main>
+
+        </div>
+
+    </div>
+
+    @await Html.PartialAsync("_Notifications")
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+
+</html>
+

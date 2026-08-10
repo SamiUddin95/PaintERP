@@ -1,0 +1,70 @@
+@model PaintERP.Models.Entities.SalesInvoice
+@{
+    ViewData["Title"] = "Delete Sales Invoice";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Delete Sales Invoice</h1>
+            <p class="page-subtitle">@Model.InvoiceNumber</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="Index">
+                <i class="icon-arrow-left"></i>
+                Back to Invoices
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">Confirm Deletion</div>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h3>Are you sure you want to delete this sales invoice?</h3>
+                <p>This action cannot be undone.</p>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <label>Invoice Number:</label>
+                    <span>@Model.InvoiceNumber</span>
+                </div>
+                <div class="detail-item">
+                    <label>Customer:</label>
+                    <span>@Model.Customer?.BusinessName</span>
+                </div>
+                <div class="detail-item">
+                    <label>Invoice Date:</label>
+                    <span>@Model.InvoiceDate.ToString("MM/dd/yyyy")</span>
+                </div>
+                <div class="detail-item">
+                    <label>Grand Total:</label>
+                    <span>@Model.GrandTotal.ToString("C")</span>
+                </div>
+                <div class="detail-item">
+                    <label>Status:</label>
+                    <span>@Model.Status</span>
+                </div>
+                <div class="detail-item">
+                    <label>Items Count:</label>
+                    <span>@Model.SalesInvoiceItems.Count</span>
+                </div>
+            </div>
+
+            <form asp-action="Delete" method="post" class="mt-4">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-danger">
+                    <i class="icon-trash"></i> Delete Invoice
+                </button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>

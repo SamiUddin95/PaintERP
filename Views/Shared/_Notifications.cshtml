@@ -1,0 +1,72 @@
+@using PaintERP.Services
+@inject INotificationService NotificationService
+
+@{
+    var messages = NotificationService.GetMessages();
+    NotificationService.ClearMessages();
+
+    // Also check ViewData for validation errors
+    var validationErrors = ViewData["ValidationErrors"] as List<string>;
+    var validationWarnings = ViewData["ValidationWarnings"] as List<string>;
+
+    if (validationErrors != null && validationErrors.Any())
+    {
+        foreach (var error in validationErrors)
+        {
+            messages.Add(new NotificationMessage
+            {
+                Message = error,
+                Type = NotificationType.Error,
+                Timestamp = DateTime.UtcNow
+            });
+        }
+    }
+
+    if (validationWarnings != null && validationWarnings.Any())
+    {
+        foreach (var warning in validationWarnings)
+        {
+            messages.Add(new NotificationMessage
+            {
+                Message = warning,
+                Type = NotificationType.Warning,
+                Timestamp = DateTime.UtcNow
+            });
+        }
+    }
+}
+
+@if (messages.Any())
+{
+    <div class="notification-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+        @foreach (var message in messages)
+        {
+            var bgColor = message.Type switch
+            {
+                NotificationType.Success => "#28a745",
+                NotificationType.Error => "#dc3545",
+                NotificationType.Warning => "#ffc107",
+                NotificationType.Info => "#17a2b8",
+                _ => "#6c757d"
+            };
+
+            <div class="alert" role="alert" style="margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: @bgColor; color: white; padding: 15px 20px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
+                <span>@message.Message</span>
+                <button type="button" onclick="this.parentElement.remove()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; margin-left: 15px;">&times;</button>
+            </div>
+        }
+    </div>
+
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            document.querySelectorAll('.notification-container .alert').forEach(function(alert) {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.3s';
+                setTimeout(function() {
+                    alert.remove();
+                }, 300);
+            });
+        }, 5000);
+    </script>
+}

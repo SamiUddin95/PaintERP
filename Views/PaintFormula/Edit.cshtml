@@ -1,0 +1,116 @@
+@model PaintERP.Models.Entities.PaintFormula
+@{
+    ViewData["Title"] = "Edit Paint Formula";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Edit Paint Formula</h1>
+            <p class="page-subtitle">Modify paint recipe or formula</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="Index">Back to List</a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">Formula Details</div>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="form-group">
+                    <label asp-for="FormulaCode" class="control-label">Formula Code</label>
+                    <input asp-for="FormulaCode" class="form-control" />
+                    <span asp-validation-for="FormulaCode" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="FormulaName" class="control-label">Formula Name</label>
+                    <input asp-for="FormulaName" class="form-control" />
+                    <span asp-validation-for="FormulaName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="PaintColor" class="control-label">Paint Color</label>
+                    <input asp-for="PaintColor" class="form-control" />
+                    <span asp-validation-for="PaintColor" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Finish" class="control-label">Finish</label>
+                    <input asp-for="Finish" class="form-control" />
+                    <span asp-validation-for="Finish" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ContainerSize" class="control-label">Container Size</label>
+                    <input asp-for="ContainerSize" class="form-control" />
+                    <span asp-validation-for="ContainerSize" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="TotalFormulaCost" class="control-label">Total Formula Cost</label>
+                    <input asp-for="TotalFormulaCost" class="form-control" type="number" step="0.01" />
+                    <span asp-validation-for="TotalFormulaCost" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ExpectedYield" class="control-label">Expected Yield</label>
+                    <input asp-for="ExpectedYield" class="form-control" type="number" step="0.01" />
+                    <span asp-validation-for="ExpectedYield" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="WastePercentage" class="control-label">Waste Percentage</label>
+                    <input asp-for="WastePercentage" class="form-control" type="number" step="0.01" />
+                    <span asp-validation-for="WastePercentage" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="SellingPrice" class="control-label">Selling Price</label>
+                    <input asp-for="SellingPrice" class="form-control" type="number" step="0.01" />
+                    <span asp-validation-for="SellingPrice" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="GrossMargin" class="control-label">Gross Margin</label>
+                    <input asp-for="GrossMargin" class="form-control" type="number" step="0.01" />
+                    <span asp-validation-for="GrossMargin" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Version" class="control-label">Version</label>
+                    <input asp-for="Version" class="form-control" type="number" />
+                    <span asp-validation-for="Version" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Status" class="control-label">Status</label>
+                    <select asp-for="Status" class="form-control">
+                        <option value="Active">Active</option>
+                        <option value="Draft">Draft</option>
+                        <option value="Archived">Archived</option>
+                        <option value="Pending">Pending</option>
+                    </select>
+                    <span asp-validation-for="Status" class="text-danger"></span>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Update Formula</button>
+                    <a class="btn btn-secondary" asp-action="Index">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

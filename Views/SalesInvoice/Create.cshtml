@@ -1,0 +1,461 @@
+@model PaintERP.Models.ViewModels.SalesInvoiceFormViewModel
+@{
+    ViewData["Title"] = "New Sales Invoice";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+<style>
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .badge-secondary { background-color: #6c757d; color: white; }
+</style>
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">New Sales Invoice</h1>
+            <p class="page-subtitle">Create a new customer invoice</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="Index">
+                <i class="icon-arrow-left"></i>
+                Back to Invoices
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="bill-form" asp-action="Create">
+        <input type="hidden" asp-for="Status" value="Draft" />
+        <div class="bill-layout">
+            <div class="bill-main">
+                <!-- Invoice Header -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Invoice Header</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="CustomerId" class="required">Customer</label>
+                                <select asp-for="CustomerId" class="form-control" asp-items="@(Model.Customers != null ? new SelectList(Model.Customers, "Id", "BusinessName") : null)">
+                                    <option value="">Select Customer</option>
+                                </select>
+                                <span asp-validation-for="CustomerId" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="InvoiceNumber">Invoice Number</label>
+                                <input asp-for="InvoiceNumber" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="InvoiceDate" class="required">Invoice Date</label>
+                                <input asp-for="InvoiceDate" type="date" class="form-control" />
+                                <span asp-validation-for="InvoiceDate" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="DueDate">Due Date</label>
+                                <input asp-for="DueDate" type="date" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="Salesperson" class="required">Salesperson</label>
+                                <input asp-for="Salesperson" class="form-control" placeholder="Enter salesperson name" />
+                                <span asp-validation-for="Salesperson" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="WarehouseId">Warehouse</label>
+                                <select asp-for="WarehouseId" class="form-control" asp-items="@(Model.Warehouses != null ? new SelectList(Model.Warehouses, "Id", "Name") : null)">
+                                    <option value="">Select Warehouse</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="ShippingMethod" class="required">Shipping Method</label>
+                                <select asp-for="ShippingMethod" class="form-control" asp-items="@(Model.ShippingMethods != null ? new SelectList(Model.ShippingMethods) : null)">
+                                </select>
+                                <span asp-validation-for="ShippingMethod" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="TrackingNumber" class="required">Tracking Number</label>
+                                <input asp-for="TrackingNumber" class="form-control" placeholder="Enter tracking number" />
+                                <span asp-validation-for="TrackingNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="PaymentTerms" class="required">Payment Terms</label>
+                                <select asp-for="PaymentTerms" class="form-control" asp-items="@(Model.PaymentTermsOptions != null ? new SelectList(Model.PaymentTermsOptions) : null)">
+                                </select>
+                                <span asp-validation-for="PaymentTerms" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="ReferenceNumber" class="required">Reference Number</label>
+                                <input asp-for="ReferenceNumber" class="form-control" placeholder="Enter reference" />
+                                <span asp-validation-for="ReferenceNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Grid -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Invoice Items</div>
+                        <div class="card-actions">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="addInvoiceItem()">
+                                <i class="icon-plus"></i> Add Item
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLastInvoiceItemRow()">
+                                <i class="icon-trash"></i> Delete Row
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="items-grid-scroll">
+                        <table class="items-table items-table-invoice" id="invoiceItemsTable">
+                            <colgroup>
+                                <col style="width:90px">
+                                <col>
+                                <col style="width:95px">
+                                <col style="width:95px">
+                                <col style="width:110px">
+                                <col style="width:110px">
+                                <col style="width:95px">
+                                <col style="width:100px">
+                                <col style="width:38px">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="col-item">SKU</th>
+                                    <th class="col-desc">Description</th>
+                                    <th class="col-qty">Qty</th>
+                                    <th class="col-unit">Unit</th>
+                                    <th class="col-price">Price</th>
+                                    <th class="col-discount">Discount %</th>
+                                    <th class="col-tax">Tax %</th>
+                                    <th class="col-total">Line Total</th>
+                                    <th class="col-action"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoiceItemsContainer">
+                                @{
+                                    var items = Model?.SalesInvoiceItems ?? new List<PaintERP.Models.ViewModels.SalesInvoiceItemViewModel>();
+                                }
+                                @for (int i = 0; i < items.Count; i++)
+                                {
+                                    <tr class="item-row" data-index="@i">
+                                        <td class="col-item">
+                                            <input type="hidden" name="SalesInvoiceItems[@i].Id" value="@(items[i]?.Id ?? 0)" />
+                                            <input type="hidden" name="SalesInvoiceItems[@i].SalesInvoiceId" value="@(items[i]?.SalesInvoiceId ?? 0)" />
+                                            <input type="text" name="SalesInvoiceItems[@i].SKU" class="form-control form-control-sm sku-input" placeholder="SKU" value="@(items[i]?.SKU ?? "")" />
+                                        </td>
+                                        <td class="col-desc">
+                                            <select name="SalesInvoiceItems[@i].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateInvoiceItemFromPaintItem(this)">
+                                                <option value="">Select Item</option>
+                                                @if (Model?.PaintItems != null)
+                                                {
+                                                    @foreach (var paintItem in Model.PaintItems)
+                                                    {
+                                                        <option value="@paintItem.Id" data-sku="@paintItem.SKU" data-name="@paintItem.Name" data-price="@paintItem.SellingPrice" data-unit="@paintItem.UnitOfMeasure" selected="@(items[i]?.PaintItemId == paintItem.Id)">@paintItem.Name</option>
+                                                    }
+                                                }
+                                            </select>
+                                            <input type="hidden" name="SalesInvoiceItems[@i].Description" class="description-input" value="@(items[i]?.Description ?? "")" />
+                                        </td>
+                                        <td class="col-qty">
+                                            <input type="number" name="SalesInvoiceItems[@i].Quantity" step="0.01" class="form-control form-control-sm quantity" value="@(items[i]?.Quantity ?? 1)" onchange="calculateInvoiceLine(this)" />
+                                        </td>
+                                        <td class="col-unit">
+                                            <select name="SalesInvoiceItems[@i].Unit" class="form-control form-control-sm">
+                                                @if (Model?.Units != null)
+                                                {
+                                                    @foreach (var unit in Model.Units)
+                                                    {
+                                                        <option value="@unit" selected="@(items[i]?.Unit == unit)">@unit</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </td>
+                                        <td class="col-price">
+                                            <input type="number" name="SalesInvoiceItems[@i].UnitPrice" step="0.01" class="form-control form-control-sm unit-price" value="@(items[i]?.UnitPrice ?? 0)" onchange="calculateInvoiceLine(this)" />
+                                        </td>
+                                        <td class="col-discount">
+                                            <input type="number" name="SalesInvoiceItems[@i].DiscountPercent" step="0.01" class="form-control form-control-sm discount-percent" value="@(items[i]?.DiscountPercent ?? 0)" onchange="calculateInvoiceLine(this)" />
+                                        </td>
+                                        <td class="col-tax">
+                                            <input type="number" name="SalesInvoiceItems[@i].TaxPercent" step="0.01" class="form-control form-control-sm tax-percent" value="@(items[i]?.TaxPercent ?? 0)" onchange="calculateInvoiceLine(this)" />
+                                        </td>
+                                        <td class="col-total">
+                                            <input type="number" name="SalesInvoiceItems[@i].LineTotal" step="0.01" class="form-control form-control-sm line-total" value="@(items[i]?.LineTotal ?? 0)" readonly />
+                                        </td>
+                                        <td class="col-action">
+                                            <button type="button" class="btn-icon btn-danger" onclick="removeInvoiceItem(this)">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Summary</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="Subtotal">Subtotal</label>
+                                <input asp-for="Subtotal" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="DiscountAmount">Discount</label>
+                                <input asp-for="DiscountAmount" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="ShippingCost">Shipping</label>
+                                <input asp-for="ShippingCost" type="number" step="0.01" class="form-control" onchange="calculateInvoiceSummary()" />
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="SalesTaxAmount">Sales Tax</label>
+                                <input asp-for="SalesTaxAmount" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="GrandTotal">Grand Total</label>
+                                <input asp-for="GrandTotal" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="AmountPaid">Amount Paid</label>
+                                <input asp-for="AmountPaid" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="BalanceDue">Balance Due</label>
+                                <input asp-for="BalanceDue" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes & Attachments -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Notes & Attachments</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="AttachmentUrl">Attachment URL</label>
+                            <input asp-for="AttachmentUrl" class="form-control" placeholder="Enter attachment URL" />
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="CustomerNotes">Customer Notes</label>
+                            <textarea asp-for="CustomerNotes" class="form-control" rows="2" placeholder="Notes visible to customer"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="InternalNotes">Internal Notes</label>
+                            <textarea asp-for="InternalNotes" class="form-control" rows="2" placeholder="Internal notes"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="bill-sidebar">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Quick Actions</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions-list">
+                            <button type="submit" class="btn btn-block btn-primary">
+                                <i class="icon-save"></i> Save Invoice
+                            </button>
+                            <a asp-action="Index" class="btn btn-block btn-outline-secondary">
+                                <i class="icon-x"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    let invoiceItemIndex = @(Model.SalesInvoiceItems?.Count ?? 0);
+
+    function addInvoiceItem() {
+        const container = document.getElementById('invoiceItemsContainer');
+        const index = invoiceItemIndex++;
+
+        const paintItems = @Html.Raw(Model.PaintItems != null ? System.Text.Json.JsonSerializer.Serialize(Model.PaintItems) : "[]");
+        const units = @Html.Raw(Model.Units != null ? System.Text.Json.JsonSerializer.Serialize(Model.Units) : "[]");
+
+        let paintItemOptions = '<option value="">Select Item</option>';
+        paintItems.forEach(item => {
+            paintItemOptions += `<option value="${item.Id}" data-sku="${item.SKU}" data-name="${item.Name}" data-price="${item.SellingPrice}" data-unit="${item.UnitOfMeasure}">${item.Name}</option>`;
+        });
+
+        let unitOptions = '';
+        units.forEach(unit => {
+            unitOptions += `<option value="${unit}">${unit}</option>`;
+        });
+
+        const itemHtml = `
+            <tr class="item-row" data-index="${index}">
+                <td class="col-item">
+                    <input type="hidden" name="SalesInvoiceItems[${index}].Id" value="0" />
+                    <input type="hidden" name="SalesInvoiceItems[${index}].SalesInvoiceId" value="0" />
+                    <input type="text" name="SalesInvoiceItems[${index}].SKU" class="form-control form-control-sm sku-input" placeholder="SKU" />
+                </td>
+                <td class="col-desc">
+                    <select name="SalesInvoiceItems[${index}].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateInvoiceItemFromPaintItem(this)">
+                        ${paintItemOptions}
+                    </select>
+                    <input type="hidden" name="SalesInvoiceItems[${index}].Description" class="description-input" value="" />
+                </td>
+                <td class="col-qty">
+                    <input type="number" name="SalesInvoiceItems[${index}].Quantity" step="0.01" class="form-control form-control-sm quantity" value="1" onchange="calculateInvoiceLine(this)" />
+                </td>
+                <td class="col-unit">
+                    <select name="SalesInvoiceItems[${index}].Unit" class="form-control form-control-sm">
+                        ${unitOptions}
+                    </select>
+                </td>
+                <td class="col-price">
+                    <input type="number" name="SalesInvoiceItems[${index}].UnitPrice" step="0.01" class="form-control form-control-sm unit-price" value="0" onchange="calculateInvoiceLine(this)" />
+                </td>
+                <td class="col-discount">
+                    <input type="number" name="SalesInvoiceItems[${index}].DiscountPercent" step="0.01" class="form-control form-control-sm discount-percent" value="0" onchange="calculateInvoiceLine(this)" />
+                </td>
+                <td class="col-tax">
+                    <input type="number" name="SalesInvoiceItems[${index}].TaxPercent" step="0.01" class="form-control form-control-sm tax-percent" value="0" onchange="calculateInvoiceLine(this)" />
+                </td>
+                <td class="col-total">
+                    <input type="number" name="SalesInvoiceItems[${index}].LineTotal" step="0.01" class="form-control form-control-sm line-total" value="0" readonly />
+                </td>
+                <td class="col-action">
+                    <button type="button" class="btn-icon btn-danger" onclick="removeInvoiceItem(this)">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+
+        container.insertAdjacentHTML('beforeend', itemHtml);
+    }
+
+    function removeInvoiceItem(button) {
+        const itemRow = button.closest('.item-row');
+        itemRow.remove();
+        calculateInvoiceSummary();
+    }
+
+    function removeLastInvoiceItemRow() {
+        const rows = document.querySelectorAll('#invoiceItemsContainer .item-row');
+        if (!rows.length) {
+            return;
+        }
+
+        rows[rows.length - 1].remove();
+        calculateInvoiceSummary();
+    }
+
+    function updateInvoiceItemFromPaintItem(select) {
+        const itemRow = select.closest('.item-row');
+        const selectedOption = select.options[select.selectedIndex];
+        const skuInput = itemRow.querySelector('.sku-input');
+        const descriptionInput = itemRow.querySelector('.description-input');
+        const unitPriceInput = itemRow.querySelector('.unit-price');
+        const unitSelect = itemRow.querySelector('select[name*="Unit"]');
+
+        if (selectedOption.value) {
+            skuInput.value = selectedOption.dataset.sku || '';
+            descriptionInput.value = selectedOption.dataset.name || '';
+            unitPriceInput.value = selectedOption.dataset.price || 0;
+            if (unitSelect) {
+                unitSelect.value = selectedOption.dataset.unit || 'Each';
+            }
+        } else {
+            skuInput.value = '';
+            descriptionInput.value = '';
+            unitPriceInput.value = 0;
+        }
+
+        calculateInvoiceLine(select);
+    }
+
+    function calculateInvoiceLine(input) {
+        const itemRow = input.closest('.item-row');
+        const quantity = parseFloat(itemRow.querySelector('.quantity').value) || 0;
+        const unitPrice = parseFloat(itemRow.querySelector('.unit-price').value) || 0;
+        const discountPercent = parseFloat(itemRow.querySelector('.discount-percent').value) || 0;
+        const taxPercent = parseFloat(itemRow.querySelector('.tax-percent').value) || 0;
+
+        const lineSubtotal = quantity * unitPrice;
+        const discountAmount = lineSubtotal * (discountPercent / 100);
+        const taxableAmount = lineSubtotal - discountAmount;
+        const taxAmount = taxableAmount * (taxPercent / 100);
+        const lineTotal = taxableAmount + taxAmount;
+
+        itemRow.querySelector('.line-total').value = lineTotal.toFixed(2);
+
+        calculateInvoiceSummary();
+    }
+
+    function calculateInvoiceSummary() {
+        const itemRows = document.querySelectorAll('#invoiceItemsContainer .item-row');
+        let subtotal = 0;
+        let totalDiscount = 0;
+        let totalTax = 0;
+
+        itemRows.forEach(row => {
+            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+            const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
+            const discountPercent = parseFloat(row.querySelector('.discount-percent').value) || 0;
+            const taxPercent = parseFloat(row.querySelector('.tax-percent').value) || 0;
+
+            const lineSubtotal = quantity * unitPrice;
+            const discountAmount = lineSubtotal * (discountPercent / 100);
+            const taxableAmount = lineSubtotal - discountAmount;
+            const taxAmount = taxableAmount * (taxPercent / 100);
+            const lineTotal = taxableAmount + taxAmount;
+
+            subtotal += lineSubtotal;
+            totalDiscount += discountAmount;
+            totalTax += taxAmount;
+        });
+
+        const shipping = parseFloat(document.querySelector('#ShippingCost').value) || 0;
+        const amountPaid = parseFloat(document.querySelector('#AmountPaid').value) || 0;
+        const grandTotal = subtotal - totalDiscount + totalTax + shipping;
+
+        document.querySelector('#Subtotal').value = subtotal.toFixed(2);
+        document.querySelector('#DiscountAmount').value = totalDiscount.toFixed(2);
+        document.querySelector('#SalesTaxAmount').value = totalTax.toFixed(2);
+        document.querySelector('#GrandTotal').value = grandTotal.toFixed(2);
+        document.querySelector('#BalanceDue').value = (grandTotal - amountPaid).toFixed(2);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateInvoiceSummary();
+    });
+</script>

@@ -1,0 +1,403 @@
+@model PaintERP.Models.ViewModels.CustomerFormViewModel
+@{
+    ViewData["Title"] = "Add New Customer";
+}
+
+<section class="customer-form-wrapper">
+    <div class="customer-form-main">
+        <div class="form-header">
+            <h1>Add New Customer</h1>
+            <p>Enter customer details to establish a new customer relationship in the ERP system.</p>
+        </div>
+
+        <form asp-controller="Customer" asp-action="Create" method="post" class="customer-form">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="validation-summary"></div>
+
+            <!-- Header Section -->
+            <div class="form-section">
+                <h2>Header</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="CustomerId">Customer ID</label>
+                        <input asp-for="CustomerId" readonly class="readonly-field" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="IsActive">Customer Status</label>
+                        <select asp-for="IsActive" class="toggle-select">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CustomerType">Customer Type</label>
+                        <select asp-for="CustomerType" asp-items="new SelectList(Model.CustomerTypes)">
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Information -->
+            <div class="form-section">
+                <h2>Business Information</h2>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label asp-for="BusinessName" class="required">Business Name</label>
+                        <input asp-for="BusinessName" required />
+                        <span asp-validation-for="BusinessName" class="validation-message"></span>
+                    </div>
+                    <div class="form-group full-width">
+                        <label asp-for="LegalCompanyName">Legal Company Name</label>
+                        <input asp-for="LegalCompanyName" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label asp-for="DBA">DBA (Doing Business As)</label>
+                        <input asp-for="DBA" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="FederalTaxId">Federal Tax ID (EIN)</label>
+                        <input asp-for="FederalTaxId" placeholder="XX-XXXXXXX" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ResaleCertificateNumber">Resale Certificate Number</label>
+                        <input asp-for="ResaleCertificateNumber" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Industry">Industry</label>
+                        <input asp-for="Industry" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CustomerGroup">Customer Group</label>
+                        <input asp-for="CustomerGroup" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SalesRepresentative">Sales Representative</label>
+                        <input asp-for="SalesRepresentative" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Primary Contact -->
+            <div class="form-section">
+                <h2>Primary Contact</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="ContactFirstName">First Name</label>
+                        <input asp-for="ContactFirstName" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ContactLastName">Last Name</label>
+                        <input asp-for="ContactLastName" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ContactTitle">Title</label>
+                        <input asp-for="ContactTitle" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label asp-for="ContactEmail">Email</label>
+                        <input asp-for="ContactEmail" type="email" />
+                        <span asp-validation-for="ContactEmail" class="validation-message"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ContactMobile">Mobile</label>
+                        <input asp-for="ContactMobile" placeholder="(XXX) XXX-XXXX" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ContactOfficePhone">Office Phone</label>
+                        <input asp-for="ContactOfficePhone" placeholder="(XXX) XXX-XXXX" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ContactExtension">Extension</label>
+                        <input asp-for="ContactExtension" placeholder="XXXX" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Billing Address -->
+            <div class="form-section">
+                <h2>Billing Address</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="BillingCountry">Country</label>
+                        <input asp-for="BillingCountry" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label asp-for="BillingStreetAddress">Street Address</label>
+                        <input asp-for="BillingStreetAddress" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="BillingSuite">Suite</label>
+                        <input asp-for="BillingSuite" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="BillingCity">City</label>
+                        <input asp-for="BillingCity" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="BillingState">State</label>
+                        <select asp-for="BillingState" asp-items="new SelectList(Model.USStates)">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="BillingZipCode">ZIP Code</label>
+                        <input asp-for="BillingZipCode" placeholder="XXXXX" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="BillingCounty">County</label>
+                        <input asp-for="BillingCounty" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Address -->
+            <div class="form-section">
+                <h2>Shipping Address</h2>
+                <div class="form-grid">
+                    <div class="form-group full-width checkbox-group">
+                        <label class="checkbox-label">
+                            <input asp-for="SameAsBillingAddress" id="sameAddress" />
+                            <span>Same as Billing Address</span>
+                        </label>
+                    </div>
+                    <div class="form-group full-width" id="shippingFields">
+                        <label asp-for="ShippingStreetAddress">Shipping Street</label>
+                        <input asp-for="ShippingStreetAddress" />
+                    </div>
+                    <div class="form-group" id="shippingCity">
+                        <label asp-for="ShippingCity">City</label>
+                        <input asp-for="ShippingCity" />
+                    </div>
+                    <div class="form-group" id="shippingState">
+                        <label asp-for="ShippingState">State</label>
+                        <select asp-for="ShippingState" asp-items="new SelectList(Model.USStates)">
+                        </select>
+                    </div>
+                    <div class="form-group" id="shippingZip">
+                        <label asp-for="ShippingZipCode">ZIP Code</label>
+                        <input asp-for="ShippingZipCode" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Settings -->
+            <div class="form-section">
+                <h2>Financial Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="OpeningBalance">Opening Balance</label>
+                        <input asp-for="OpeningBalance" type="number" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CreditLimit">Credit Limit</label>
+                        <input asp-for="CreditLimit" type="number" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="PaymentTerms">Payment Terms</label>
+                        <select asp-for="PaymentTerms" asp-items="new SelectList(Model.PaymentTermsOptions)">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="PreferredPaymentMethod">Preferred Payment Method</label>
+                        <select asp-for="PreferredPaymentMethod" asp-items="new SelectList(Model.PaymentMethods)">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SalesTaxCode">Sales Tax Code</label>
+                        <input asp-for="SalesTaxCode" />
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input asp-for="IsTaxExempt" />
+                            <span>Tax Exempt</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Currency">Currency</label>
+                        <input asp-for="Currency" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DefaultPriceList">Default Price List</label>
+                        <input asp-for="DefaultPriceList" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CustomerDiscountPercent">Customer Discount %</label>
+                        <input asp-for="CustomerDiscountPercent" type="number" step="0.01" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Information -->
+            <div class="form-section">
+                <h2>Delivery Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="PreferredWarehouse">Preferred Warehouse</label>
+                        <input asp-for="PreferredWarehouse" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DeliveryMethod">Delivery Method</label>
+                        <input asp-for="DeliveryMethod" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label asp-for="DeliveryInstructions">Delivery Instructions</label>
+                        <textarea asp-for="DeliveryInstructions" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ReceivingHours">Receiving Hours</label>
+                        <input asp-for="ReceivingHours" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="LoadingDockInfo">Loading Dock Information</label>
+                        <input asp-for="LoadingDockInfo" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paint Industry Information -->
+            <div class="form-section">
+                <h2>Paint Industry Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="PreferredPaintBrand">Preferred Paint Brand</label>
+                        <input asp-for="PreferredPaintBrand" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="PreferredColorCodes">Preferred Color Codes</label>
+                        <input asp-for="PreferredColorCodes" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label asp-for="FavoriteProducts">Favorite Products</label>
+                        <textarea asp-for="FavoriteProducts" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ProjectType">Project Type</label>
+                        <select asp-for="ProjectType" asp-items="new SelectList(Model.ProjectTypes)">
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="form-section">
+                <h2>Documents</h2>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label asp-for="ResaleCertificatePath">Upload Resale Certificate</label>
+                        <input type="file" accept=".pdf" />
+                        <input asp-for="ResaleCertificatePath" type="hidden" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label asp-for="ContractPath">Upload Contract</label>
+                        <input type="file" accept=".pdf,.doc,.docx" />
+                        <input asp-for="ContractPath" type="hidden" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label asp-for="CreditApplicationPath">Upload Credit Application</label>
+                        <input type="file" accept=".pdf,.doc,.docx" />
+                        <input asp-for="CreditApplicationPath" type="hidden" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label asp-for="OtherDocumentsPath">Upload Other Documents</label>
+                        <input type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" />
+                        <input asp-for="OtherDocumentsPath" type="hidden" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-section">
+                <h2>Notes</h2>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label asp-for="InternalNotes">Internal Notes</label>
+                        <textarea asp-for="InternalNotes" rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Action Bar -->
+            <div class="form-actions sticky">
+                <button type="submit" class="primary-btn">Save Customer</button>
+                <button type="submit" name="action" value="SaveAndNew" class="secondary-btn">Save & New</button>
+                <a asp-action="Index" class="ghost-btn">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const validationSummary = document.querySelector('.validation-summary');
+            if (validationSummary && validationSummary.querySelector('ul')) {
+                const firstInvalidField = document.querySelector('.input-validation-error');
+                if (firstInvalidField) {
+                    firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalidField.focus();
+                }
+            }
+        });
+    </script>
+
+    <!-- Right Sidebar Dashboard -->
+    <aside class="customer-sidebar">
+        <div class="sidebar-card">
+            <h3>Customer Dashboard</h3>
+            <div class="sidebar-metrics">
+                <div class="metric">
+                    <span>Customer Since</span>
+                    <strong>@Model.CustomerSince.ToString("MMM dd, yyyy")</strong>
+                </div>
+                <div class="metric">
+                    <span>Total Sales</span>
+                    <strong>@Model.TotalSales.ToString("C")</strong>
+                </div>
+                <div class="metric">
+                    <span>Outstanding Balance</span>
+                    <strong>@Model.OutstandingBalance.ToString("C")</strong>
+                </div>
+                <div class="metric">
+                    <span>Last Invoice</span>
+                    <strong>@(Model.LastInvoiceDate?.ToString("MMM dd, yyyy") ?? "N/A")</strong>
+                </div>
+                <div class="metric">
+                    <span>Last Payment</span>
+                    <strong>@(Model.LastPaymentDate?.ToString("MMM dd, yyyy") ?? "N/A")</strong>
+                </div>
+                <div class="metric">
+                    <span>Lifetime Revenue</span>
+                    <strong>@Model.LifetimeRevenue.ToString("C")</strong>
+                </div>
+                <div class="metric">
+                    <span>Average Order Value</span>
+                    <strong>@Model.AverageOrderValue.ToString("C")</strong>
+                </div>
+                <div class="metric">
+                    <span>Customer Rating</span>
+                    <strong>@string.Concat(Enumerable.Repeat("★", Model.CustomerRating))</strong>
+                </div>
+                @if (Model.IsVIP)
+                {
+                    <div class="vip-badge-sidebar">VIP Customer</div>
+                }
+            </div>
+        </div>
+    </aside>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sameAddressCheckbox = document.getElementById('sameAddress');
+            const shippingFields = document.querySelectorAll('#shippingFields, #shippingCity, #shippingState, #shippingZip');
+
+            function toggleShippingFields() {
+                const isChecked = sameAddressCheckbox.checked;
+                shippingFields.forEach(field => {
+                    field.style.display = isChecked ? 'none' : 'block';
+                });
+            }
+
+            sameAddressCheckbox.addEventListener('change', toggleShippingFields);
+            toggleShippingFields();
+        });
+    </script>
+}

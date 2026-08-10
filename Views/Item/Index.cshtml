@@ -1,0 +1,129 @@
+@model PaintERP.Models.ViewModels.ItemListViewModel
+@{
+    ViewData["Title"] = "Item Master";
+    ViewData["Action"] = "Index";
+}
+
+<section class="item-module">
+    <div class="item-header">
+        <div>
+            <h1>Item Master</h1>
+            <p>Manage inventory items, SKUs, pricing, and warehouse stock levels across all facilities.</p>
+        </div>
+        <a asp-action="Create" class="primary-btn">
+            <span>+</span> Add New Item
+        </a>
+    </div>
+
+    <div class="item-stats">
+        <div class="stat-card">
+            <span>Total Items</span>
+            <strong>@Model.TotalCount</strong>
+            <small>Active SKUs</small>
+        </div>
+        <div class="stat-card">
+            <span>Inventory Value</span>
+            <strong>@Model.TotalInventoryValue.ToString("C")</strong>
+            <small>Total assets</small>
+        </div>
+        <div class="stat-card">
+            <span>Low Stock Alerts</span>
+            <strong>@Model.LowStockCount</strong>
+            <small>Below reorder point</small>
+        </div>
+    </div>
+
+    <div class="item-toolbar">
+        <div class="filters">
+            <input type="search" placeholder="Search SKU, name, barcode..." value="@Model.SearchTerm" />
+            <select>
+                <option selected="@(Model.FilterType == "All")">All Types</option>
+                <option selected="@(Model.FilterType == "Inventory")">Inventory</option>
+                <option selected="@(Model.FilterType == "Non Inventory")">Non Inventory</option>
+                <option selected="@(Model.FilterType == "Service")">Service</option>
+                <option selected="@(Model.FilterType == "Assembly")">Assembly</option>
+                <option selected="@(Model.FilterType == "Raw Material")">Raw Material</option>
+                <option selected="@(Model.FilterType == "Finished Product")">Finished Product</option>
+            </select>
+            <select>
+                <option selected="@(Model.FilterCategory == "All")">All Categories</option>
+            </select>
+        </div>
+        <button class="ghost">Export</button>
+    </div>
+
+    <div class="item-table-card">
+        <table class="item-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Warehouse</th>
+                    <th>Current Stock</th>
+                    <th>Available</th>
+                    <th>Inventory Value</th>
+                    <th>Selling Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    var stockClass = item.CurrentStock <= 0 ? "stock-critical" : item.CurrentStock < 50 ? "stock-low" : "stock-good";
+                    <tr>
+                        <td>
+                            <div class="item-cell">
+                                <div class="item-color" style="background-color: @item.ColorHex;"></div>
+                                <div class="item-info">
+                                    <span class="item-sku">@item.SKU</span>
+                                    <span class="item-name">@item.Name</span>
+                                    <small class="item-upc">@item.UPCBarcode</small>
+                                </div>
+                                @if (item.IsHazardousMaterial)
+                                {
+                                    <span class="hazard-badge">⚠️ Hazardous</span>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <span class="item-type">@item.ItemType</span>
+                            <small>@item.Brand</small>
+                        </td>
+                        <td>
+                            <span>@item.Category</span>
+                        </td>
+                        <td>
+                            <span>@item.WarehouseName</span>
+                        </td>
+                        <td>
+                            <span class="stock @stockClass">@item.CurrentStock.ToString("N2")</span>
+                        </td>
+                        <td>
+                            <span class="stock">@item.AvailableStock.ToString("N2")</span>
+                        </td>
+                        <td>
+                            <span class="amount">@item.InventoryValue.ToString("C")</span>
+                        </td>
+                        <td>
+                            <span class="amount">@item.SellingPrice.ToString("C")</span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn" title="Edit">✏️</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="action-btn danger" title="Delete">🗑️</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pagination" model="Model.Items" />
+</section>
+
+@{
+    ViewData["searchTerm"] = Model.SearchTerm;
+    ViewData["filterType"] = Model.FilterType;
+    ViewData["filterCategory"] = Model.FilterCategory;
+}

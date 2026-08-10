@@ -1,0 +1,51 @@
+@model PaintERP.Models.Entities.PaintItem
+@{
+    ViewData["Title"] = "Delete Item";
+}
+
+<section class="item-delete-wrapper">
+    <div class="delete-card">
+        <div class="delete-header">
+            <h1>Delete Item</h1>
+            <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+        </div>
+
+        <div class="item-summary">
+            <div class="summary-item">
+                <span>SKU</span>
+                <strong>@Model.SKU</strong>
+            </div>
+            <div class="summary-item">
+                <span>Item Name</span>
+                <strong>@Model.Name</strong>
+            </div>
+            <div class="summary-item">
+                <span>Item Type</span>
+                <strong>@Model.ItemType</strong>
+            </div>
+            <div class="summary-item">
+                <span>Category</span>
+                <strong>@Model.Category</strong>
+            </div>
+            <div class="summary-item">
+                <span>Current Stock</span>
+                <strong>@Model.CurrentStock.ToString("N2")</strong>
+            </div>
+            <div class="summary-item">
+                <span>Inventory Value</span>
+                <strong>@Model.InventoryValue.ToString("C")</strong>
+            </div>
+            <div class="summary-item">
+                <span>Selling Price</span>
+                <strong>@Model.SellingPrice.ToString("C")</strong>
+            </div>
+        </div>
+
+        <form asp-controller="Item" asp-action="Delete" method="post" class="delete-actions">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="danger-btn">Confirm Delete</button>
+            <a asp-action="Index" class="ghost-btn">Cancel</a>
+        </form>
+    </div>
+</section>

@@ -1,0 +1,70 @@
+@model PaintERP.Models.Entities.InventoryTransfer
+@{
+    ViewData["Title"] = "Delete Inventory Transfer";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Delete Inventory Transfer</h1>
+            <p class="page-subtitle">@Model.TransferNumber</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="Index">
+                <i class="icon-arrow-left"></i>
+                Back to Transfers
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">Confirm Deletion</div>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h3>Are you sure you want to delete this inventory transfer?</h3>
+                <p>This action cannot be undone.</p>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <label>Transfer Number:</label>
+                    <span>@Model.TransferNumber</span>
+                </div>
+                <div class="detail-item">
+                    <label>Transfer Date:</label>
+                    <span>@Model.TransferDate.ToString("yyyy-MM-dd")</span>
+                </div>
+                <div class="detail-item">
+                    <label>Source Warehouse:</label>
+                    <span>@Model.SourceWarehouse?.Name</span>
+                </div>
+                <div class="detail-item">
+                    <label>Destination Warehouse:</label>
+                    <span>@Model.DestinationWarehouse?.Name</span>
+                </div>
+                <div class="detail-item">
+                    <label>Status:</label>
+                    <span>@Model.Status</span>
+                </div>
+                <div class="detail-item">
+                    <label>Items Count:</label>
+                    <span>@Model.InventoryTransferItems.Count</span>
+                </div>
+            </div>
+
+            <form asp-action="Delete" method="post" class="mt-4">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-danger">
+                    <i class="icon-trash"></i> Delete Transfer
+                </button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>

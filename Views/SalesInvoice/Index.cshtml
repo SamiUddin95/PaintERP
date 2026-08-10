@@ -1,0 +1,78 @@
+@model PaintERP.Models.ViewModels.PaginatedList<PaintERP.Models.ViewModels.SalesInvoiceListItem>
+@{
+    ViewData["Title"] = "Sales Invoices";
+    ViewData["Action"] = "Index";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Sales Invoices</h1>
+            <p class="page-subtitle">Manage customer invoices and payments</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-primary" asp-action="Create">
+                <i class="icon-plus"></i>
+                New Invoice
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">All Invoices</div>
+            <div class="card-actions">
+                <input type="text" class="search-input" placeholder="Search invoices..." />
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Customer</th>
+                            <th>Invoice Date</th>
+                            <th>Due Date</th>
+                            <th>Grand Total</th>
+                            <th>Balance Due</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <a class="link-primary" asp-action="Edit" asp-route-id="@item.Id">@item.InvoiceNumber</a>
+                                </td>
+                                <td>@item.CustomerName</td>
+                                <td>@item.InvoiceDate.ToString("MM/dd/yyyy")</td>
+                                <td>@item.DueDate?.ToString("MM/dd/yyyy")</td>
+                                <td>@item.GrandTotal.ToString("C")</td>
+                                <td>@item.BalanceDue.ToString("C")</td>
+                                <td>
+                                    <span class="status-badge status-@item.Status.ToLower()">@item.Status</span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-icon" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn-icon btn-danger" title="Delete">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <partial name="_Pagination" model="Model" />
+    </div>
+</div>

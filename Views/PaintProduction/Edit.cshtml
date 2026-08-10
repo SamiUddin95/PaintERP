@@ -1,0 +1,508 @@
+@model PaintERP.Models.ViewModels.PaintProductionFormViewModel
+@{
+    ViewData["Title"] = "Edit Paint Production";
+}
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Edit Paint Production</h1>
+            <p class="page-subtitle">Edit paint mixing batch #@Model.ProductionNumber</p>
+        </div>
+        <div class="header-right">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="icon-arrow-left"></i>
+                Back to Production
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="bill-form" asp-action="Edit" id="mainForm">
+        <div asp-validation-summary="All" class="validation-summary"></div>
+        <input type="hidden" asp-for="Id">
+
+        <div class="bill-layout">
+            <div class="bill-main">
+                <!-- Production Header -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Production Header</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="ProductionNumber">Production Number</label>
+                                <input asp-for="ProductionNumber" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" asp-for="BatchNumber">Batch Number</label>
+                                <input asp-for="BatchNumber" class="form-control" placeholder="Enter batch number">
+                                <span asp-validation-for="BatchNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" asp-for="Recipe">Recipe</label>
+                                <input asp-for="Recipe" class="form-control" placeholder="Enter recipe">
+                                <span asp-validation-for="Recipe" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" asp-for="ProductionDate">Production Date</label>
+                                <input asp-for="ProductionDate" type="date" class="form-control">
+                                <span asp-validation-for="ProductionDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" asp-for="WarehouseId">Warehouse</label>
+                                <select asp-for="WarehouseId" class="form-control">
+                                    <option value="">Select Warehouse</option>
+                                    @foreach (var warehouse in Model.Warehouses)
+                                    {
+                                        <option value="@warehouse.Id" selected="@Model.WarehouseId == warehouse.Id">@warehouse.Name</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="WarehouseId" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" asp-for="OutputQuantity">Output Quantity</label>
+                                <input asp-for="OutputQuantity" type="number" step="0.01" class="form-control" placeholder="0.00">
+                                <span asp-validation-for="OutputQuantity" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="FinishedProductId">Finished Product</label>
+                                <select asp-for="FinishedProductId" class="form-control">
+                                    <option value="">Select Finished Product</option>
+                                    @foreach (var item in Model.PaintItems)
+                                    {
+                                        <option value="@item.Id" selected="@Model.FinishedProductId == item.Id">@item.Name (@item.SKU)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="FormulaId">Formula</label>
+                                <select asp-for="FormulaId" class="form-control">
+                                    <option value="">Select Formula</option>
+                                    @foreach (var formula in Model.Formulas)
+                                    {
+                                        <option value="@formula.Id" selected="@Model.FormulaId == formula.Id">@formula.FormulaName</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="FinishedProductDescription">Finished Product Description</label>
+                                <input asp-for="FinishedProductDescription" class="form-control" placeholder="Enter description">
+                                <span asp-validation-for="FinishedProductDescription" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Status">Status</label>
+                                <select asp-for="Status" class="form-control">
+                                    @foreach (var status in Model.StatusOptions)
+                                    {
+                                        <option value="@status" selected="@Model.Status == status">@status</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Raw Materials -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Raw Materials</div>
+                        <div class="card-actions">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="addMaterial()">
+                                <i class="icon-plus"></i>
+                                Add Material
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLastMaterial()">
+                                <i class="icon-trash"></i>
+                                Delete Row
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="items-grid">
+                            <div class="items-header">
+                                <div class="col-material-type">Material Type</div>
+                                <div class="col-material">Material</div>
+                                <div class="col-percentage">% in Mix</div>
+                                <div class="col-qty">Required Qty</div>
+                                <div class="col-cost">Unit Cost</div>
+                                <div class="col-total">Total Cost</div>
+                                <div class="col-action"></div>
+                            </div>
+                            <div id="materialsContainer">
+                                @for (int i = 0; i < Model.Materials.Count; i++)
+                                {
+                                    <div class="item-row" data-index="@i">
+                                        <input type="hidden" asp-for="Materials[i].Id">
+                                        <input type="hidden" asp-for="Materials[i].PaintProductionId">
+                                        
+                                        <div class="col-material-type">
+                                            <select asp-for="Materials[i].MaterialType" class="form-control form-control-sm" onchange="updateMaterialName(this)">
+                                                <option value="">Select Type</option>
+                                                <option value="Blue Paint" selected="@Model.Materials[i].MaterialType == "Blue Paint"">Blue Paint</option>
+                                                <option value="Red Paint" selected="@Model.Materials[i].MaterialType == "Red Paint"">Red Paint</option>
+                                                <option value="Yellow Paint" selected="@Model.Materials[i].MaterialType == "Yellow Paint"">Yellow Paint</option>
+                                                <option value="White Base" selected="@Model.Materials[i].MaterialType == "White Base"">White Base</option>
+                                                <option value="Hardener" selected="@Model.Materials[i].MaterialType == "Hardener"">Hardener</option>
+                                                <option value="Thinner" selected="@Model.Materials[i].MaterialType == "Thinner"">Thinner</option>
+                                                <option value="Additive" selected="@Model.Materials[i].MaterialType == "Additive"">Additive</option>
+                                            </select>
+                                            <input type="hidden" asp-for="Materials[i].MaterialName" class="material-name">
+                                        </div>
+                                        <div class="col-material">
+                                            <select asp-for="Materials[i].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateMaterialCost(this)">
+                                                <option value="">Select Material</option>
+                                                @foreach (var paintItem in Model.PaintItems)
+                                                {
+                                                    <option value="@paintItem.Id" data-cost="@paintItem.UnitCost" data-stock="0.00" selected="@Model.Materials[i].PaintItemId == paintItem.Id">@paintItem.Name (@paintItem.SKU)</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="col-percentage">
+                                            <input asp-for="Materials[i].PercentageInMix" type="number" step="0.01" class="form-control form-control-sm percentage" onchange="calculateProductionMaterial(this)">
+                                        </div>
+                                        <div class="col-qty">
+                                            <input asp-for="Materials[i].RequiredQuantity" type="number" step="0.01" class="form-control form-control-sm required-qty" onchange="calculateProductionMaterial(this)">
+                                        </div>
+                                        <div class="col-cost">
+                                            <input asp-for="Materials[i].UnitCost" type="number" step="0.01" class="form-control form-control-sm unit-cost" onchange="calculateProductionMaterial(this)">
+                                        </div>
+                                        <div class="col-total">
+                                            <input asp-for="Materials[i].TotalCost" type="number" step="0.01" class="form-control form-control-sm total-cost" readonly>
+                                        </div>
+                                        <div class="col-action">
+                                            <button type="button" class="btn-icon btn-danger" onclick="removeMaterial(this)">
+                                                <i class="icon-x"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost Summary -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Cost Summary</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="summary-row">
+                            <label>Material Cost</label>
+                            <input asp-for="MaterialCost" type="number" step="0.01" class="form-control summary-input" onchange="calculateProductionCost()">
+                        </div>
+                        <div class="summary-row">
+                            <label>Labor Cost</label>
+                            <input asp-for="LaborCost" type="number" step="0.01" class="form-control summary-input" onchange="calculateProductionCost()">
+                        </div>
+                        <div class="summary-row">
+                            <label>Overhead Cost</label>
+                            <input asp-for="OverheadCost" type="number" step="0.01" class="form-control summary-input" onchange="calculateProductionCost()">
+                        </div>
+                        <div class="summary-row summary-total">
+                            <label>Production Cost</label>
+                            <input asp-for="ProductionCost" type="number" step="0.01" class="form-control summary-input" readonly>
+                        </div>
+                        <div class="summary-row">
+                            <label>Finished Product Cost</label>
+                            <input asp-for="FinishedProductCost" type="number" step="0.01" class="form-control summary-input" onchange="calculateCostPerUnit()">
+                        </div>
+                        <div class="summary-row">
+                            <label>Cost Per Unit</label>
+                            <input asp-for="CostPerUnit" type="number" step="0.01" class="form-control summary-input" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quality Control -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Quality Control</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="BatchLabel">Batch Label</label>
+                                <input asp-for="BatchLabel" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="QCStatus">QC Status</label>
+                                <select asp-for="QCStatus" class="form-control">
+                                    <option value="">Select Status</option>
+                                    @foreach (var status in Model.QCStatusOptions)
+                                    {
+                                        <option value="@status" selected="@Model.QCStatus == status">@status</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="QCReport">QC Report</label>
+                            <textarea asp-for="QCReport" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="QCNotes">QC Notes</label>
+                            <textarea asp-for="QCNotes" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Notes</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="ProductionNotes">Production Notes</label>
+                            <textarea asp-for="ProductionNotes" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bill-sidebar">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Production Summary</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="sidebar-info">
+                            <label>Production Number</label>
+                            <div class="info-value">@Model.ProductionNumber</div>
+                        </div>
+                        <div class="sidebar-info">
+                            <label>Status</label>
+                            <div class="info-value">@Model.Status</div>
+                        </div>
+                        <div class="sidebar-info">
+                            <label>Total Materials</label>
+                            <div class="info-value" id="totalMaterialsCount">@Model.Materials.Count</div>
+                        </div>
+                        <div class="sidebar-info">
+                            <label>Total Cost</label>
+                            <div class="info-value" id="sidebarTotalCost">$@Model.ProductionCost.ToString("F2")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Quick Actions</div>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Status != "In Progress" && Model.Status != "Completed")
+                        {
+                            <form asp-action="Start" asp-route-id="@Model.Id" method="post" style="display: inline;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-block btn-success">
+                                    <i class="icon-play"></i> Start Production
+                                </button>
+                            </form>
+                        }
+                        @if (Model.Status != "Completed")
+                        {
+                            <form asp-action="Complete" asp-route-id="@Model.Id" method="post" style="display: inline;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-block btn-primary">
+                                    <i class="icon-check"></i> Complete Production
+                                </button>
+                            </form>
+                        }
+                        <button type="button" class="btn btn-block btn-secondary" onclick="window.print()">
+                            <i class="icon-print"></i> Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button type="submit" form="mainForm" class="btn btn-primary">
+                <i class="icon-save"></i>
+                Save Changes
+            </button>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="icon-x"></i>
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    let materialIndex = @Model.Materials.Count;
+
+    function addMaterial() {
+        const container = document.getElementById('materialsContainer');
+        const index = materialIndex++;
+        
+        const materialHtml = `
+            <div class="item-row" data-index="${index}">
+                <input type="hidden" name="Materials[${index}].Id" value="">
+                <input type="hidden" name="Materials[${index}].PaintProductionId" value="">
+                
+                <div class="col-material-type">
+                    <select name="Materials[${index}].MaterialType" class="form-control form-control-sm" onchange="updateMaterialName(this)">
+                        <option value="">Select Type</option>
+                        <option value="Blue Paint">Blue Paint</option>
+                        <option value="Red Paint">Red Paint</option>
+                        <option value="Yellow Paint">Yellow Paint</option>
+                        <option value="White Base">White Base</option>
+                        <option value="Hardener">Hardener</option>
+                        <option value="Thinner">Thinner</option>
+                        <option value="Additive">Additive</option>
+                    </select>
+                    <input type="hidden" name="Materials[${index}].MaterialName" class="material-name">
+                </div>
+                <div class="col-material">
+                    <select name="Materials[${index}].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateMaterialCost(this)">
+                        <option value="">Select Material</option>
+                        @foreach (var paintItem in Model.PaintItems)
+                        {
+                            <option value="@paintItem.Id" data-cost="@paintItem.UnitCost" data-stock="0.00">@paintItem.Name (@paintItem.SKU)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-percentage">
+                    <input name="Materials[${index}].PercentageInMix" type="number" step="0.01" class="form-control form-control-sm percentage" onchange="calculateProductionMaterial(this)">
+                </div>
+                <div class="col-qty">
+                    <input name="Materials[${index}].RequiredQuantity" type="number" step="0.01" class="form-control form-control-sm required-qty" onchange="calculateProductionMaterial(this)">
+                </div>
+                <div class="col-cost">
+                    <input name="Materials[${index}].UnitCost" type="number" step="0.01" class="form-control form-control-sm unit-cost" onchange="calculateProductionMaterial(this)">
+                </div>
+                <div class="col-total">
+                    <input name="Materials[${index}].TotalCost" type="number" step="0.01" class="form-control form-control-sm total-cost" readonly>
+                </div>
+                <div class="col-action">
+                    <button type="button" class="btn-icon btn-danger" onclick="removeMaterial(this)">
+                        <i class="icon-x"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', materialHtml);
+        updateMaterialCount();
+    }
+
+    function removeMaterial(button) {
+        const row = button.closest('.item-row');
+        if (row) {
+            row.remove();
+            calculateMaterialCost();
+            updateMaterialCount();
+        }
+    }
+
+    function removeLastMaterial() {
+        const rows = document.querySelectorAll('#materialsContainer .item-row');
+        if (!rows.length) {
+            return;
+        }
+
+        rows[rows.length - 1].remove();
+        calculateMaterialCost();
+        updateMaterialCount();
+    }
+
+    function updateMaterialName(select) {
+        const row = select.closest('.item-row');
+        const materialNameInput = row.querySelector('.material-name');
+        materialNameInput.value = select.value;
+    }
+
+    function updateMaterialCost(select) {
+        const row = select.closest('.item-row');
+        const selectedOption = select.options[select.selectedIndex];
+        const unitCostInput = row.querySelector('.unit-cost');
+        
+        if (selectedOption && selectedOption.value) {
+            const cost = selectedOption.getAttribute('data-cost') || '0';
+            unitCostInput.value = cost;
+            calculateProductionMaterial(select);
+        }
+    }
+
+    function calculateProductionMaterial(element) {
+        const row = element.closest('.item-row');
+        const requiredQty = parseFloat(row.querySelector('.required-qty').value) || 0;
+        const unitCost = parseFloat(row.querySelector('.unit-cost').value) || 0;
+        const totalCost = requiredQty * unitCost;
+        
+        row.querySelector('.total-cost').value = totalCost.toFixed(2);
+        calculateMaterialCost();
+    }
+
+    function calculateMaterialCost() {
+        const totalCosts = document.querySelectorAll('.total-cost');
+        let materialCost = 0;
+        
+        totalCosts.forEach(input => {
+            materialCost += parseFloat(input.value) || 0;
+        });
+
+        document.getElementById('MaterialCost').value = materialCost.toFixed(2);
+        calculateProductionCost();
+        updateSidebarTotalCost();
+    }
+
+    function calculateProductionCost() {
+        const materialCost = parseFloat(document.getElementById('MaterialCost').value) || 0;
+        const laborCost = parseFloat(document.getElementById('LaborCost').value) || 0;
+        const overheadCost = parseFloat(document.getElementById('OverheadCost').value) || 0;
+
+        const productionCost = materialCost + laborCost + overheadCost;
+        document.getElementById('ProductionCost').value = productionCost.toFixed(2);
+        calculateCostPerUnit();
+    }
+
+    function calculateCostPerUnit() {
+        const productionCost = parseFloat(document.getElementById('ProductionCost').value) || 0;
+        const outputQty = parseFloat(document.getElementById('OutputQuantity').value) || 1;
+
+        const costPerUnit = outputQty > 0 ? productionCost / outputQty : 0;
+        document.getElementById('CostPerUnit').value = costPerUnit.toFixed(2);
+    }
+
+    function updateMaterialCount() {
+        const count = document.querySelectorAll('#materialsContainer .item-row').length;
+        document.getElementById('totalMaterialsCount').textContent = count;
+    }
+
+    function updateSidebarTotalCost() {
+        const productionCost = parseFloat(document.getElementById('ProductionCost').value) || 0;
+        document.getElementById('sidebarTotalCost').textContent = '$' + productionCost.toFixed(2);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const rows = document.querySelectorAll('.item-row');
+        rows.forEach((row) => {
+            const unitCostInput = row.querySelector('.unit-cost');
+            const materialNameInput = row.querySelector('.material-name');
+            const typeSelect = row.querySelector('.col-material-type select');
+            
+            if (typeSelect && materialNameInput) {
+                materialNameInput.value = typeSelect.value;
+            }
+            
+            if (unitCostInput) {
+                const event = new Event('change');
+                unitCostInput.dispatchEvent(event);
+            }
+        });
+        updateMaterialCount();
+        updateSidebarTotalCost();
+    });
+</script>

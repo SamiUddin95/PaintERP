@@ -1,0 +1,94 @@
+@model PaintERP.Models.ViewModels.PaginatedList<PaintERP.Controllers.PurchaseOrderListItem>
+@{
+    ViewData["Title"] = "Purchase Orders";
+    ViewData["Action"] = "Index";
+}
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Purchase Orders</h1>
+            <p class="page-subtitle">Manage vendor purchase orders</p>
+        </div>
+        <div class="header-right">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="icon-plus"></i>
+                New Purchase Order
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">All Purchase Orders</div>
+            <div class="card-actions">
+                <input type="text" class="search-input" placeholder="Search purchase orders..." />
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>PO Number</th>
+                            <th>Vendor</th>
+                            <th>Order Date</th>
+                            <th>Expected Delivery</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Approved</th>
+                            <th>Received</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr class="data-row">
+                                <td>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="link-primary">@item.PONumber</a>
+                                </td>
+                                <td>@item.VendorName</td>
+                                <td>@item.OrderDate.ToString("MM/dd/yyyy")</td>
+                                <td>@(item.ExpectedDeliveryDate?.ToString("MM/dd/yyyy") ?? "-")</td>
+                                <td>@item.TotalAmount.ToString("C2")</td>
+                                <td>
+                                    <span class="status-badge status-@item.Status.ToLower().Replace(" ", "-")">@item.Status</span>
+                                </td>
+                                <td>
+                                    @if (item.IsApproved)
+                                    {
+                                        <span class="text-success">✓</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.IsReceived)
+                                    {
+                                        <span class="text-success">✓</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-icon" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                        @if (item.IsApproved && !item.IsFullyReceived)
+                                        {
+                                            <a asp-action="ReceiveItems" asp-route-id="@item.Id" class="btn-icon" title="Receive Items">
+                                                <i class="fa-solid fa-download"></i>
+                                            </a>
+                                        }
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn-icon btn-danger" title="Delete">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <partial name="_Pagination" model="Model" />
+    </div>
+</div>

@@ -1,0 +1,135 @@
+@model PaintERP.Models.ViewModels.UserManagementViewModel
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<section class="user-mgmt">
+    <div class="user-mgmt__hero">
+        <div>
+            <p class="pill success">Live Plant Access</p>
+            <h1>User Management</h1>
+            <p>Control operator access, engineering privileges, and vendor portals across all facilities. Syncs with Azure AD + OT gateways.</p>
+            <p class="pill warning">Last sync: @Model.LastSyncUtc.ToLocalTime():MMM dd, yyyy h\:mm tt</p>
+        </div>
+        <div class="hero-tags">
+            <div class="pill">Primary Plant: @Model.PrimaryPlant</div>
+            <div class="pill">Regions: @string.Join(", ", Model.Regions)</div>
+            <div class="pill">Policies: @Model.AccessPolicies.Count</div>
+        </div>
+    </div>
+
+    <div class="user-stats">
+        @foreach (var stat in Model.Stats)
+        {
+            <article class="stat-card" style="--accent:@stat.AccentHex">
+                <span>@stat.Title</span>
+                <strong>@stat.Value</strong>
+                <small>@stat.Subtitle</small>
+            </article>
+        }
+    </div>
+
+    <div class="user-toolbar">
+        <div class="filters">
+            <select>
+                <option>All Plants</option>
+                @foreach (var plant in Model.Plants)
+                {
+                    <option>@plant</option>
+                }
+            </select>
+            <select>
+                <option>All Regions</option>
+                @foreach (var region in Model.Regions)
+                {
+                    <option>@region</option>
+                }
+            </select>
+            <input type="search" placeholder="Search name, role, email" />
+        </div>
+        <button class="primary-btn-solid">Create Access Profile</button>
+    </div>
+
+    <div class="user-grid">
+        <aside class="user-access">
+            <h3>Access Policies</h3>
+            <ul>
+                @foreach (var policy in Model.AccessPolicies)
+                {
+                    <li>
+                        <span class="pill">Tier</span>
+                        <div>
+                            <strong>@policy.Split(' ')[0]</strong>
+                            <small>@policy</small>
+                        </div>
+                    </li>
+                }
+            </ul>
+
+            <div class="quick-metrics">
+                <div class="tile">MFA enforced: <strong>@Model.Users.Count(u => u.MfaEnabled)</strong></div>
+                <div class="tile">Pending reviews: <strong>@Model.Users.Count(u => u.Status == "Review")</strong></div>
+                <div class="tile">Suspended: <strong>@Model.Users.Count(u => u.Status == "Suspended")</strong></div>
+            </div>
+        </aside>
+
+        <section class="user-table-card">
+            <div class="user-table__header">
+                <h3>Directory</h3>
+                <p>@Model.Users.Count users • Live telemetry updates every 5 min</p>
+            </div>
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Plant / Shift</th>
+                        <th>Access</th>
+                        <th>Last Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.Users)
+                    {
+                        var statusClass = user.Status switch
+                        {
+                            "Active" => "status-chip status-active",
+                            "Review" => "status-chip status-review",
+                            _ => "status-chip status-suspended"
+                        };
+                        <tr>
+                            <td>
+                                <span class="table-row-title">@user.Name</span>
+                                <span class="table-row-sub">@user.Email</span>
+                                @if (user.MfaEnabled)
+                                {
+                                    <span class="mfa-flag">MFA · Verified</span>
+                                }
+                                else
+                                {
+                                    <span class="mfa-flag">MFA Pending</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="table-row-title">@user.Role</span>
+                                <span class="table-row-sub">@user.Department</span>
+                            </td>
+                            <td>
+                                <span class="table-row-title">@user.Plant</span>
+                                <span class="table-row-sub">@user.Region · @user.Shift shift</span>
+                            </td>
+                            <td>
+                                <span class="table-row-title">@user.AccessTier</span>
+                                <span class="@statusClass">@user.Status</span>
+                            </td>
+                            <td>
+                                <span class="table-row-title">@user.LastActiveUtc.ToLocalTime():MMM dd, h\:mm tt</span>
+                                <span class="table-row-sub">OT gateway</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    </div>
+</section>

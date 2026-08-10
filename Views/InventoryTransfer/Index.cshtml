@@ -1,0 +1,63 @@
+@model IEnumerable<PaintERP.Models.Entities.InventoryTransfer>
+@{
+    ViewData["Title"] = "Inventory Transfers";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Inventory Transfers</h1>
+            <p class="page-subtitle">Manage inventory transfers between warehouses</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-primary" asp-action="Create">
+                <i class="icon-plus"></i>
+                New Transfer
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">All Transfers</div>
+            <div class="card-actions">
+                <input type="text" class="search-input" placeholder="Search transfers..." />
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Transfer #</th>
+                            <th>Source Warehouse</th>
+                            <th>Destination Warehouse</th>
+                            <th>Transfer Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.TransferNumber</td>
+                                <td>@item.SourceWarehouse?.Name</td>
+                                <td>@item.DestinationWarehouse?.Name</td>
+                                <td>@item.TransferDate.ToString("yyyy-MM-dd")</td>
+                                <td>@item.Status</td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">Details</a>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edit</a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

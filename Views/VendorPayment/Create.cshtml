@@ -1,0 +1,235 @@
+@model PaintERP.Models.ViewModels.VendorPaymentFormViewModel
+@{
+    ViewData["Title"] = "New Vendor Payment";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">New Vendor Payment</h1>
+            <p class="page-subtitle">Record a payment to a vendor</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="Index">
+                <i class="icon-arrow-left"></i>
+                Back to Payments
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="bill-form" asp-action="Create">
+        <div class="bill-layout">
+            <div class="bill-main">
+                <!-- Payment Header -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Payment Information</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="VendorId" class="required">Vendor</label>
+                                <select asp-for="VendorId" class="form-control" onchange="loadVendorBills()" id="vendorSelect" asp-items="@(new SelectList(Model.Vendors, "Id", "BusinessName"))">
+                                    <option value="">Select Vendor</option>
+                                </select>
+                                <span asp-validation-for="VendorId" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="PaymentNumber">Payment Number</label>
+                                <input asp-for="PaymentNumber" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="PaymentDate" class="required">Payment Date</label>
+                                <input asp-for="PaymentDate" type="date" class="form-control" />
+                                <span asp-validation-for="PaymentDate" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="PaymentMethod" class="required">Payment Method</label>
+                                <select asp-for="PaymentMethod" class="form-control" asp-items="@(new SelectList(Model.PaymentMethods))">
+                                </select>
+                                <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="BankAccount" class="required">Bank Account</label>
+                                <select asp-for="BankAccount" class="form-control" asp-items="@(new SelectList(Model.BankAccounts))">
+                                </select>
+                                <span asp-validation-for="BankAccount" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="ReferenceNumber" class="required">Reference Number</label>
+                                <input asp-for="ReferenceNumber" class="form-control" placeholder="Check #, Ref, etc." />
+                                <span asp-validation-for="ReferenceNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="TotalPaymentAmount" class="required">Total Payment Amount</label>
+                                <input asp-for="TotalPaymentAmount" type="number" step="0.01" class="form-control" id="totalPaymentAmount" onchange="calculateVendorPaymentTotals()" />
+                                <span asp-validation-for="TotalPaymentAmount" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Status">Status</label>
+                                <select asp-for="Status" class="form-control" asp-items="@(new SelectList(Model.StatusOptions))">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bills Grid -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Apply Payment to Bills</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="items-grid">
+                            <div class="items-header">
+                                <div class="col-select">Apply</div>
+                                <div class="col-bill">Bill Number</div>
+                                <div class="col-date">Date</div>
+                                <div class="col-amount">Bill Amount</div>
+                                <div class="col-amount-due">Amount Due</div>
+                                <div class="col-payment">Payment Amount</div>
+                                <div class="col-remaining">Remaining Balance</div>
+                            </div>
+                            <div id="billsContainer">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Payment Summary</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="TotalApplied">Total Applied</label>
+                                <input asp-for="TotalApplied" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="UnappliedAmount">Unapplied Amount</label>
+                                <input asp-for="UnappliedAmount" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Notes">Notes</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Enter payment notes"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="bill-sidebar">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Actions</div>
+                    </div>
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="icon-save"></i> Record Payment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    let billIndex = 0;
+
+    function loadVendorBills() {
+        const vendorId = document.getElementById('vendorSelect').value;
+        const container = document.getElementById('billsContainer');
+
+        if (!vendorId) {
+            container.innerHTML = '';
+            calculateVendorPaymentTotals();
+            return;
+        }
+
+        fetch(`/VendorPayment/GetVendorBills?vendorId=${vendorId}`)
+            .then(response => response.json())
+            .then(bills => {
+                container.innerHTML = '';
+                billIndex = 0;
+
+                bills.forEach(bill => {
+                    const billDate = new Date(bill.billDate).toLocaleDateString();
+                    const row = document.createElement('div');
+                    row.className = 'item-row';
+                    row.dataset.index = billIndex;
+                    row.innerHTML = `
+                        <input type="hidden" name="VendorPaymentBills[${billIndex}].Id" value="0" />
+                        <input type="hidden" name="VendorPaymentBills[${billIndex}].BillId" value="${bill.id}" />
+                        <input type="hidden" name="VendorPaymentBills[${billIndex}].BillNumber" value="${bill.billNumber}" />
+                        <input type="hidden" name="VendorPaymentBills[${billIndex}].BillAmount" value="${bill.billAmount.toFixed(2)}" />
+                        <input type="hidden" name="VendorPaymentBills[${billIndex}].AmountDue" value="${bill.amountDue.toFixed(2)}" />
+                        <div class="col-select">
+                            <input type="checkbox" name="VendorPaymentBills[${billIndex}].IsSelected" class="bill-select" value="true" onchange="calculateVendorPaymentTotals()" />
+                        </div>
+                        <div class="col-bill">${bill.billNumber}</div>
+                        <div class="col-date">${billDate}</div>
+                        <div class="col-amount">$${bill.billAmount.toFixed(2)}</div>
+                        <div class="col-amount-due">$${bill.amountDue.toFixed(2)}</div>
+                        <div class="col-payment">
+                            <input type="number" name="VendorPaymentBills[${billIndex}].PaymentAmount" step="0.01" class="form-control form-control-sm payment-amount" value="${bill.amountDue.toFixed(2)}" onchange="calculateVendorPaymentTotals()" />
+                        </div>
+                        <div class="col-remaining">
+                            <input type="number" name="VendorPaymentBills[${billIndex}].RemainingBalance" step="0.01" class="form-control form-control-sm remaining-balance" value="0.00" readonly />
+                        </div>
+                    `;
+                    container.appendChild(row);
+                    billIndex++;
+                });
+
+                calculateVendorPaymentTotals();
+            });
+    }
+
+    function calculateVendorPaymentTotals() {
+        const totalPaymentAmount = parseFloat(document.getElementById('totalPaymentAmount').value) || 0;
+        const itemRows = document.querySelectorAll('#billsContainer .item-row');
+        let totalApplied = 0;
+
+        itemRows.forEach(row => {
+            const isSelected = row.querySelector('.bill-select')?.checked || false;
+            const amountDue = parseFloat(row.querySelector('[name*="AmountDue"]').value) || 0;
+            const paymentAmountInput = row.querySelector('.payment-amount');
+            const remainingBalanceInput = row.querySelector('.remaining-balance');
+
+            if (isSelected) {
+                let paymentAmount = parseFloat(paymentAmountInput.value) || 0;
+                if (paymentAmount > amountDue) {
+                    paymentAmount = amountDue;
+                    paymentAmountInput.value = paymentAmount.toFixed(2);
+                }
+                const remainingBalance = amountDue - paymentAmount;
+                remainingBalanceInput.value = remainingBalance.toFixed(2);
+                totalApplied += paymentAmount;
+            } else {
+                paymentAmountInput.value = 0;
+                remainingBalanceInput.value = amountDue.toFixed(2);
+            }
+        });
+
+        const unappliedAmount = totalPaymentAmount - totalApplied;
+
+        document.getElementById('TotalApplied').value = totalApplied.toFixed(2);
+        document.getElementById('UnappliedAmount').value = unappliedAmount.toFixed(2);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateVendorPaymentTotals();
+    });
+</script>

@@ -1,0 +1,91 @@
+@model PaintERP.Models.ViewModels.LoginViewModel
+@{
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    ViewData["Title"] = "Login";
+}
+
+<section class="login-split">
+    <div class="login-panel">
+        <div class="eyebrow">USA Cloud ERP Platform</div>
+        <h1>Sign in to <span>Unicorp Bissonet</span></h1>
+        <p class="lead">Enter your professional credentials to manage shop operations, formulations, and inventory.</p>
+
+        <form class="login-form" asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+            <label asp-for="Email" class="field-label"></label>
+            <div class="input-field">
+                <span class="field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.5 5.5C2.5 4.39543 3.39543 3.5 4.5 3.5H15.5C16.6046 3.5 17.5 4.39543 17.5 5.5V14.5C17.5 15.6046 16.6046 16.5 15.5 16.5H4.5C3.39543 16.5 2.5 15.6046 2.5 14.5V5.5Z" stroke="#94A3B8" stroke-width="1.4" />
+                        <path d="M3 6L10 10L17 6" stroke="#94A3B8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+                <input asp-for="Email" placeholder="name@company.com" />
+            </div>
+            <span asp-validation-for="Email" class="validation-message"></span>
+
+            <label asp-for="Password" class="field-label"></label>
+            <div class="input-field">
+                <span class="field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="4" y="9" width="12" height="8" rx="2" stroke="#94A3B8" stroke-width="1.4" />
+                        <path d="M7 9V6.5C7 4.567 8.567 3 10.5 3V3C12.433 3 14 4.567 14 6.5V9" stroke="#94A3B8" stroke-width="1.4" />
+                    </svg>
+                </span>
+                <input asp-for="Password" placeholder="••••••••" />
+                <button type="button" class="field-action" aria-label="Reveal password">👁</button>
+            </div>
+            <span asp-validation-for="Password" class="validation-message"></span>
+
+            <div class="form-row">
+                <label class="remember">
+                    <input asp-for="KeepSignedIn" />
+                    <span>@Html.DisplayNameFor(m => m.KeepSignedIn)</span>
+                </label>
+                <a class="forgot" href="#">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="primary-btn">
+                Access Dashboard
+                <span aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 6L19 12L13 18" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M5 12H19" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+            </button>
+        </form>
+
+        <div class="demo-credentials">
+            <strong>Demo Access</strong>
+            <p>Email: <code>ops@unicorpbissonet.com</code><br />Password: <code>USA-Ready24!</code></p>
+        </div>
+
+        <div class="secure-row">
+            <span class="shield" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 2L4 4V9C4 12.866 6.686 16.333 10 17C13.314 16.333 16 12.866 16 9V4L10 2Z" stroke="#16A34A" stroke-width="1.4" stroke-linejoin="round" />
+                    <path d="M7.5 9.5L9 11L12.5 7.5" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </span>
+            Secure Enterprise Authentication
+        </div>
+
+        <div class="login-meta">
+            <a href="#">Support</a>
+            <span>&bull;</span>
+            <a href="#">Privacy Policy</a>
+        </div>
+    </div>
+
+    <div class="visual-panel">
+        <div class="visual-stack">
+            <img src="@Url.Content("~/login image.png")" alt="Paint manufacturing control room illustration" class="login-illustration" />
+            <img src="@Url.Content("~/login container.png")" alt="Operations readiness summary" class="login-card" />
+        </div>
+    </div>
+</section>
+
+<footer class="auth-footer">&copy; 2026 Unicorp Bissonet.</footer>

@@ -1,0 +1,314 @@
+@model PaintERP.Models.ViewModels.ItemFormViewModel
+@{
+    ViewData["Title"] = "Edit Item";
+}
+
+<section class="item-form-wrapper">
+    <div class="item-form-main">
+        <div class="form-header">
+            <h1>Edit Item</h1>
+            <p>Update item details and inventory settings in the ERP system.</p>
+        </div>
+
+        <form asp-controller="Item" asp-action="Edit" method="post" class="item-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="All" class="validation-summary"></div>
+
+            <!-- Identification Section -->
+            <div class="form-section">
+                <h2>Identification</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="SKU">SKU</label>
+                        <input asp-for="SKU" readonly class="readonly-field" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="UPCBarcode">UPC Barcode</label>
+                        <input asp-for="UPCBarcode" placeholder="Enter UPC" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label asp-for="Name" class="required">Item Name</label>
+                        <input asp-for="Name" required />
+                        <span asp-validation-for="Name" class="validation-message"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ItemType">Item Type</label>
+                        <select asp-for="ItemType" asp-items="new SelectList(Model.ItemTypes)">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Category">Category</label>
+                        <input asp-for="Category" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Brand">Brand</label>
+                        <input asp-for="Brand" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Manufacturer">Manufacturer</label>
+                        <input asp-for="Manufacturer" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warehouse & Location -->
+            <div class="form-section">
+                <h2>Warehouse & Location</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="WarehouseId" class="required">Warehouse</label>
+                        <select asp-for="WarehouseId" asp-items="@(new SelectList(Model.Warehouses, "Id", "Name"))">
+                            <option value="">Select Warehouse</option>
+                        </select>
+                        <span asp-validation-for="WarehouseId" class="validation-message"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DefaultBin">Default Bin</label>
+                        <input asp-for="DefaultBin" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="UnitOfMeasure">Unit of Measure</label>
+                        <select asp-for="UnitOfMeasure" asp-items="new SelectList(Model.UnitsOfMeasure)">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="PurchaseUnit">Purchase Unit</label>
+                        <select asp-for="PurchaseUnit" asp-items="new SelectList(Model.UnitsOfMeasure)">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SalesUnit">Sales Unit</label>
+                        <select asp-for="SalesUnit" asp-items="new SelectList(Model.UnitsOfMeasure)">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CostMethod">Cost Method</label>
+                        <select asp-for="CostMethod" asp-items="new SelectList(Model.CostMethods)">
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing -->
+            <div class="form-section">
+                <h2>Pricing</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="PurchasePrice">Purchase Price</label>
+                        <input asp-for="PurchasePrice" type="number" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SellingPrice">Selling Price</label>
+                        <input asp-for="SellingPrice" type="number" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="MSRP">MSRP</label>
+                        <input asp-for="MSRP" type="number" step="0.01" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Levels -->
+            <div class="form-section">
+                <h2>Inventory Levels</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="MinimumStock">Minimum Stock</label>
+                        <input asp-for="MinimumStock" type="number" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="MaximumStock">Maximum Stock</label>
+                        <input asp-for="MaximumStock" type="number" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ReorderPoint">Reorder Point</label>
+                        <input asp-for="ReorderPoint" type="number" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="PreferredVendorId">Preferred Vendor</label>
+                        <select asp-for="PreferredVendorId">
+                            <option value="">Select Vendor</option>
+                            @for (int i = 0; i < Model.Vendors.Count; i++)
+                            {
+                                <option value="@(i + 1)">@Model.Vendors[i]</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accounting -->
+            <div class="form-section">
+                <h2>Accounting</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="SalesTaxCategory">Sales Tax Category</label>
+                        <input asp-for="SalesTaxCategory" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="InventoryAssetAccount">Inventory Asset Account</label>
+                        <input asp-for="InventoryAssetAccount" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="COGSAccount">COGS Account</label>
+                        <input asp-for="COGSAccount" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="IncomeAccount">Income Account</label>
+                        <input asp-for="IncomeAccount" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Physical Properties -->
+            <div class="form-section">
+                <h2>Physical Properties</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="Weight">Weight (lbs)</label>
+                        <input asp-for="Weight" type="number" step="0.001" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Dimensions">Dimensions</label>
+                        <input asp-for="Dimensions" placeholder="L x W x H" />
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input asp-for="IsHazardousMaterial" />
+                            <span>Hazardous Material</span>
+                        </label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input asp-for="LotTracking" />
+                            <span>Lot Tracking</span>
+                        </label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input asp-for="BatchTracking" />
+                            <span>Batch Tracking</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ExpirationDate">Expiration Date</label>
+                        <input asp-for="ExpirationDate" type="date" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paint-specific -->
+            <div class="form-section">
+                <h2>Paint Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label asp-for="ColorFamily">Color Family</label>
+                        <input asp-for="ColorFamily" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ColorHex">Color Hex</label>
+                        <div class="color-picker">
+                            <input asp-for="ColorHex" type="color" />
+                            <input asp-for="ColorHex" type="text" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="UnitCost">Unit Cost</label>
+                        <input asp-for="UnitCost" type="number" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="StockQuantity">Stock Quantity</label>
+                        <input asp-for="StockQuantity" type="number" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ReorderLevel">Reorder Level</label>
+                        <input asp-for="ReorderLevel" type="number" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="form-section">
+                <h2>Documents</h2>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label asp-for="ImagePath">Image Upload</label>
+                        <input type="file" accept="image/*" />
+                        <input asp-for="ImagePath" type="hidden" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label asp-for="AttachmentsPath">Attachments</label>
+                        <input type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" />
+                        <input asp-for="AttachmentsPath" type="hidden" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-section">
+                <h2>Notes</h2>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label asp-for="Notes">Notes</label>
+                        <textarea asp-for="Notes" rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Action Bar -->
+            <div class="form-actions sticky">
+                <button type="submit" class="primary-btn">Save Item</button>
+                <button type="submit" name="action" value="SaveAndNew" class="secondary-btn">Save & New</button>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="danger-btn">Delete</a>
+                <a asp-action="Index" class="ghost-btn">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const validationSummary = document.querySelector('.validation-summary');
+            if (validationSummary && validationSummary.querySelector('ul')) {
+                const firstInvalidField = document.querySelector('.input-validation-error');
+                if (firstInvalidField) {
+                    firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalidField.focus();
+                }
+            }
+        });
+    </script>
+
+    <!-- Right Sidebar Dashboard -->
+    <aside class="item-sidebar">
+        <div class="sidebar-card">
+            <h3>Inventory Dashboard</h3>
+            <div class="sidebar-metrics">
+                <div class="metric">
+                    <span>Current Stock</span>
+                    <strong>@Model.CurrentStock.ToString("N2")</strong>
+                </div>
+                <div class="metric">
+                    <span>Available Stock</span>
+                    <strong>@Model.AvailableStock.ToString("N2")</strong>
+                </div>
+                <div class="metric">
+                    <span>Reserved Stock</span>
+                    <strong>@Model.ReservedStock.ToString("N2")</strong>
+                </div>
+                <div class="metric">
+                    <span>Inventory Value</span>
+                    <strong>@Model.InventoryValue.ToString("C")</strong>
+                </div>
+                <div class="metric">
+                    <span>Last Purchase</span>
+                    <strong>@(Model.LastPurchaseDate?.ToString("MMM dd, yyyy") ?? "N/A")</strong>
+                </div>
+                <div class="metric">
+                    <span>Last Sale</span>
+                    <strong>@(Model.LastSaleDate?.ToString("MMM dd, yyyy") ?? "N/A")</strong>
+                </div>
+            </div>
+        </div>
+    </aside>
+</section>

@@ -1,0 +1,232 @@
+@model PaintERP.Models.ViewModels.InventoryTransferFormViewModel
+@{
+    ViewData["Title"] = "Edit Inventory Transfer";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Edit Inventory Transfer</h1>
+            <p class="page-subtitle">@Model.TransferNumber</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="Index">
+                <i class="icon-arrow-left"></i>
+                Back to Transfers
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="bill-form" asp-action="Edit">
+        <input type="hidden" asp-for="Id" />
+        <div class="bill-layout">
+            <div class="bill-main">
+                <!-- Header -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Transfer Header</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="TransferNumber">Transfer Number</label>
+                                <input asp-for="TransferNumber" class="form-control" readonly />
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="TransferDate" class="required">Transfer Date</label>
+                                <input asp-for="TransferDate" type="date" class="form-control" />
+                                <span asp-validation-for="TransferDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="SourceWarehouseId" class="required">Source Warehouse</label>
+                                <select asp-for="SourceWarehouseId" class="form-control" asp-items="@(new SelectList(Model.Warehouses, "Id", "Name"))">
+                                    <option value="">Select Source Warehouse</option>
+                                </select>
+                                <span asp-validation-for="SourceWarehouseId" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="DestinationWarehouseId" class="required">Destination Warehouse</label>
+                                <select asp-for="DestinationWarehouseId" class="form-control" asp-items="@(new SelectList(Model.Warehouses, "Id", "Name"))">
+                                    <option value="">Select Destination Warehouse</option>
+                                </select>
+                                <span asp-validation-for="DestinationWarehouseId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="Status">Status</label>
+                                <select asp-for="Status" class="form-control" asp-items="@(new SelectList(Model.StatusOptions))">
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="TrackingNumber">Tracking Number</label>
+                                <input asp-for="TrackingNumber" class="form-control" placeholder="Enter tracking number" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Notes">Notes</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Enter transfer notes"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Transfer Items</div>
+                        <div class="card-actions">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="addTransferItem()">
+                                <i class="icon-plus"></i> Add Item
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLastTransferItemRow()">
+                                <i class="icon-trash"></i> Delete Row
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="items-grid">
+                            <div class="items-header">
+                                <div class="col-item">SKU</div>
+                                <div class="col-desc">Description</div>
+                                <div class="col-qty">Quantity</div>
+                                <div class="col-unit">Unit</div>
+                                <div class="col-batch">Batch Number</div>
+                                <div class="col-action"></div>
+                            </div>
+                            <div id="transferItemsContainer">
+                                @for (int i = 0; i < Model.InventoryTransferItems.Count; i++)
+                                {
+                                    <div class="item-row" data-index="@i">
+                                        <input type="hidden" asp-for="InventoryTransferItems[i].Id" />
+                                        <input type="hidden" asp-for="InventoryTransferItems[i].InventoryTransferId" />
+                                        <div class="col-item">
+                                            <input asp-for="InventoryTransferItems[i].SKU" class="form-control form-control-sm sku-input" placeholder="SKU" />
+                                        </div>
+                                        <div class="col-desc">
+                                            <select asp-for="InventoryTransferItems[i].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateTransferItem(this)" asp-items="@(new SelectList(Model.PaintItems, "Id", "Name", Model.InventoryTransferItems[i].PaintItemId))">
+                                                <option value="">Select Item</option>
+                                            </select>
+                                            <input type="hidden" asp-for="InventoryTransferItems[i].Description" class="description-input" />
+                                        </div>
+                                        <div class="col-qty">
+                                            <input asp-for="InventoryTransferItems[i].Quantity" type="number" step="0.01" class="form-control form-control-sm" />
+                                        </div>
+                                        <div class="col-unit">
+                                            <input asp-for="InventoryTransferItems[i].Unit" class="form-control form-control-sm unit-input" />
+                                        </div>
+                                        <div class="col-batch">
+                                            <input asp-for="InventoryTransferItems[i].BatchNumber" class="form-control form-control-sm" placeholder="Batch #" />
+                                        </div>
+                                        <div class="col-action">
+                                            <button type="button" class="btn-icon btn-danger" onclick="removeTransferItem(this)">
+                                                <i class="icon-x"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bill-sidebar">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Actions</div>
+                    </div>
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="icon-save"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    let transferItemIndex = @Model.InventoryTransferItems.Count;
+
+    function addTransferItem() {
+        const container = document.getElementById('transferItemsContainer');
+        const itemRow = document.createElement('div');
+        itemRow.className = 'item-row';
+        itemRow.dataset.index = transferItemIndex;
+
+        const paintItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaintItems));
+
+        let paintItemOptions = '<option value="">Select Item</option>';
+        paintItems.forEach(item => {
+            paintItemOptions += `<option value="${item.Id}" data-sku="${item.SKU}" data-name="${item.Name}" data-unit="${item.UnitOfMeasure}">${item.Name}</option>`;
+        });
+
+        itemRow.innerHTML = `
+            <input type="hidden" name="InventoryTransferItems[${transferItemIndex}].Id" value="0" />
+            <input type="hidden" name="InventoryTransferItems[${transferItemIndex}].InventoryTransferId" value="0" />
+            <div class="col-item">
+                <input type="text" name="InventoryTransferItems[${transferItemIndex}].SKU" class="form-control form-control-sm sku-input" placeholder="SKU" />
+            </div>
+            <div class="col-desc">
+                <select name="InventoryTransferItems[${transferItemIndex}].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateTransferItem(this)">
+                    ${paintItemOptions}
+                </select>
+                <input type="hidden" name="InventoryTransferItems[${transferItemIndex}].Description" class="description-input" value="" />
+            </div>
+            <div class="col-qty">
+                <input type="number" name="InventoryTransferItems[${transferItemIndex}].Quantity" step="0.01" class="form-control form-control-sm" value="1" />
+            </div>
+            <div class="col-unit">
+                <input type="text" name="InventoryTransferItems[${transferItemIndex}].Unit" class="form-control form-control-sm unit-input" value="Each" />
+            </div>
+            <div class="col-batch">
+                <input type="text" name="InventoryTransferItems[${transferItemIndex}].BatchNumber" class="form-control form-control-sm" placeholder="Batch #" />
+            </div>
+            <div class="col-action">
+                <button type="button" class="btn-icon btn-danger" onclick="removeTransferItem(this)">
+                    <i class="icon-x"></i>
+                </button>
+            </div>
+        `;
+
+        container.appendChild(itemRow);
+        transferItemIndex++;
+    }
+
+    function removeTransferItem(button) {
+        const itemRow = button.closest('.item-row');
+        itemRow.remove();
+    }
+
+    function removeLastTransferItemRow() {
+        const rows = document.querySelectorAll('#transferItemsContainer .item-row');
+        if (!rows.length) {
+            return;
+        }
+
+        rows[rows.length - 1].remove();
+    }
+
+    function updateTransferItem(select) {
+        const itemRow = select.closest('.item-row');
+        const selectedOption = select.options[select.selectedIndex];
+        const skuInput = itemRow.querySelector('.sku-input');
+        const descriptionInput = itemRow.querySelector('.description-input');
+        const unitInput = itemRow.querySelector('.unit-input');
+
+        if (selectedOption.value) {
+            skuInput.value = selectedOption.dataset.sku || '';
+            descriptionInput.value = selectedOption.dataset.name || '';
+            unitInput.value = selectedOption.dataset.unit || 'Each';
+        } else {
+            skuInput.value = '';
+            descriptionInput.value = '';
+            unitInput.value = 'Each';
+        }
+    }
+</script>

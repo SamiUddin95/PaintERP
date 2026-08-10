@@ -1,0 +1,155 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace PaintERP.Models.ViewModels;
+
+public class PaintProductionFormViewModel
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+
+    [Required]
+    [Display(Name = "Production Number")]
+    [MaxLength(50)]
+    public string ProductionNumber { get; set; } = string.Empty;
+
+    [Required]
+    [Display(Name = "Recipe")]
+    [MaxLength(200)]
+    public string Recipe { get; set; } = string.Empty;
+
+    [Required]
+    [Display(Name = "Batch Number")]
+    [MaxLength(50)]
+    public string BatchNumber { get; set; } = string.Empty;
+
+    [Required]
+    [Display(Name = "Production Date")]
+    public DateTime ProductionDate { get; set; } = DateTime.UtcNow;
+
+    [Required]
+    [Display(Name = "Warehouse")]
+    public int WarehouseId { get; set; }
+
+    [Required]
+    [Display(Name = "Output Quantity")]
+    public decimal OutputQuantity { get; set; }
+
+    [Display(Name = "Status")]
+    [MaxLength(50)]
+    public string Status { get; set; } = "Pending";
+
+    [Display(Name = "Finished Product")]
+    public int? FinishedProductId { get; set; }
+
+    [Display(Name = "Formula")]
+    public int? FormulaId { get; set; }
+
+    [Required]
+    [Display(Name = "Finished Product Description")]
+    [MaxLength(500)]
+    public string FinishedProductDescription { get; set; } = string.Empty;
+
+    [Display(Name = "Material Cost")]
+    public decimal MaterialCost { get; set; }
+
+    [Display(Name = "Labor Cost")]
+    public decimal LaborCost { get; set; }
+
+    [Display(Name = "Overhead Cost")]
+    public decimal OverheadCost { get; set; }
+
+    [Display(Name = "Production Cost")]
+    public decimal ProductionCost { get; set; }
+
+    [Display(Name = "Finished Product Cost")]
+    public decimal FinishedProductCost { get; set; }
+
+    [Display(Name = "Cost Per Unit")]
+    public decimal CostPerUnit { get; set; }
+
+    [Display(Name = "Batch Label")]
+    [MaxLength(50)]
+    public string? BatchLabel { get; set; }
+
+    [Display(Name = "QC Status")]
+    [MaxLength(50)]
+    public string? QCStatus { get; set; }
+
+    [Display(Name = "QC Report")]
+    public string? QCReport { get; set; }
+
+    [Display(Name = "QC Notes")]
+    public string? QCNotes { get; set; }
+
+    [Display(Name = "Production Notes")]
+    public string? ProductionNotes { get; set; }
+
+    public List<PaintProductionMaterialViewModel> Materials { get; set; } = new List<PaintProductionMaterialViewModel>();
+
+    public List<PaintProductionWarehouseListItem> Warehouses { get; set; } = new List<PaintProductionWarehouseListItem>();
+    public List<PaintProductionPaintItemListItem> PaintItems { get; set; } = new List<PaintProductionPaintItemListItem>();
+    public List<PaintProductionFormulaListItem> Formulas { get; set; } = new List<PaintProductionFormulaListItem>();
+    public List<string> StatusOptions { get; } = new() { "Pending", "In Progress", "Completed", "On Hold", "Cancelled" };
+    public List<string> QCStatusOptions { get; } = new() { "Pending", "Passed", "Failed", "In Review" };
+}
+
+public class PaintProductionMaterialViewModel
+{
+    public int Id { get; set; }
+    public int PaintProductionId { get; set; }
+
+    [Display(Name = "Material Name")]
+    [MaxLength(100)]
+    public string MaterialName { get; set; } = string.Empty;
+
+    [Display(Name = "Material Type")]
+    [MaxLength(50)]
+    public string MaterialType { get; set; } = string.Empty;
+
+    [Display(Name = "Paint Item")]
+    public int? PaintItemId { get; set; }
+
+    [Required]
+    [Display(Name = "Required Quantity")]
+    public decimal RequiredQuantity { get; set; }
+
+    [Required]
+    [Display(Name = "Consumed Quantity")]
+    public decimal ConsumedQuantity { get; set; }
+
+    [Required]
+    [Display(Name = "Unit Cost")]
+    public decimal UnitCost { get; set; }
+
+    [Display(Name = "Total Cost")]
+    public decimal TotalCost { get; set; }
+
+    [Display(Name = "Percentage in Mix")]
+    public decimal? PercentageInMix { get; set; }
+
+    [Display(Name = "Stock Before")]
+    public decimal StockBefore { get; set; }
+
+    [Display(Name = "Stock After")]
+    public decimal StockAfter { get; set; }
+}
+
+public class PaintProductionWarehouseListItem
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
+public class PaintProductionPaintItemListItem
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string SKU { get; set; } = string.Empty;
+    public decimal UnitCost { get; set; }
+}
+
+public class PaintProductionFormulaListItem
+{
+    public int Id { get; set; }
+    public string FormulaName { get; set; } = string.Empty;
+}

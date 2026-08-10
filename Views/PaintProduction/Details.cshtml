@@ -1,0 +1,183 @@
+@model PaintERP.Models.Entities.PaintProduction
+@{
+    ViewData["Title"] = "Production Details";
+}
+
+<div class="page-header">
+    <h1>Production Details</h1>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+
+<div class="bill-layout">
+    <div class="bill-main">
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title">Production Information</div>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Production Number</label>
+                        <input value="@Model.ProductionNumber" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Recipe</label>
+                        <input value="@Model.Recipe" class="form-control" readonly>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Batch Number</label>
+                        <input value="@Model.BatchNumber" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Production Date</label>
+                        <input value="@Model.ProductionDate.ToString("MMM dd, yyyy")" class="form-control" readonly>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Warehouse</label>
+                        <input value="@Model.Warehouse?.Name" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Output Quantity</label>
+                        <input value="@Model.OutputQuantity.ToString("F2")" class="form-control" readonly>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <input value="@Model.Status" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Finished Product</label>
+                        <input value="@Model.FinishedProduct?.Name" class="form-control" readonly>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Finished Product Description</label>
+                    <input value="@Model.FinishedProductDescription" class="form-control" readonly>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title">Materials</div>
+            </div>
+            <div class="card-body">
+                <div class="items-grid">
+                    <div class="items-header">
+                        <div class="col-item">Material</div>
+                        <div class="col-type">Type</div>
+                        <div class="col-req-qty">Required Qty</div>
+                        <div class="col-cons-qty">Consumed Qty</div>
+                        <div class="col-unit-cost">Unit Cost</div>
+                        <div class="col-total-cost">Total Cost</div>
+                    </div>
+                    @foreach (var material in Model.Materials)
+                    {
+                        <div class="item-row">
+                            <div class="col-item">
+                                <input value="@material.MaterialName" class="form-control form-control-sm" readonly>
+                            </div>
+                            <div class="col-type">
+                                <input value="@material.MaterialType" class="form-control form-control-sm" readonly>
+                            </div>
+                            <div class="col-req-qty">
+                                <input value="@material.RequiredQuantity.ToString("F2")" class="form-control form-control-sm" readonly>
+                            </div>
+                            <div class="col-cons-qty">
+                                <input value="@material.ConsumedQuantity.ToString("F2")" class="form-control form-control-sm" readonly>
+                            </div>
+                            <div class="col-unit-cost">
+                                <input value="@material.UnitCost.ToString("F2")" class="form-control form-control-sm" readonly>
+                            </div>
+                            <div class="col-total-cost">
+                                <input value="@material.TotalCost.ToString("F2")" class="form-control form-control-sm" readonly>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title">Cost Summary</div>
+            </div>
+            <div class="card-body">
+                <div class="summary-row">
+                    <label>Material Cost</label>
+                    <input value="@Model.MaterialCost.ToString("F2")" class="form-control summary-input" readonly>
+                </div>
+                <div class="summary-row">
+                    <label>Labor Cost</label>
+                    <input value="@Model.LaborCost.ToString("F2")" class="form-control summary-input" readonly>
+                </div>
+                <div class="summary-row">
+                    <label>Overhead Cost</label>
+                    <input value="@Model.OverheadCost.ToString("F2")" class="form-control summary-input" readonly>
+                </div>
+                <div class="summary-row summary-total">
+                    <label>Production Cost</label>
+                    <input value="@Model.ProductionCost.ToString("F2")" class="form-control summary-input" readonly>
+                </div>
+                <div class="summary-row">
+                    <label>Finished Product Cost</label>
+                    <input value="@Model.FinishedProductCost.ToString("F2")" class="form-control summary-input" readonly>
+                </div>
+                <div class="summary-row">
+                    <label>Cost Per Unit</label>
+                    <input value="@Model.CostPerUnit.ToString("F2")" class="form-control summary-input" readonly>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title">Quality Control</div>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Batch Label</label>
+                        <input value="@Model.BatchLabel" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>QC Status</label>
+                        <input value="@Model.QCStatus" class="form-control" readonly>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>QC Report</label>
+                    <textarea class="form-control" rows="3" readonly>@Model.QCReport</textarea>
+                </div>
+                <div class="form-group">
+                    <label>QC Notes</label>
+                    <textarea class="form-control" rows="3" readonly>@Model.QCNotes</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title">Notes</div>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Production Notes</label>
+                    <textarea class="form-control" rows="3" readonly>@Model.ProductionNotes</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

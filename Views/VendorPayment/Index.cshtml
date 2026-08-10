@@ -1,0 +1,76 @@
+@model IEnumerable<PaintERP.Models.Entities.VendorPayment>
+@{
+    ViewData["Title"] = "Vendor Payments";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Vendor Payments</h1>
+            <p class="page-subtitle">Manage vendor bill payments and remittances</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-primary" asp-action="Create">
+                <i class="icon-plus"></i>
+                New Vendor Payment
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">All Vendor Payments</div>
+            <div class="card-actions">
+                <input type="text" class="search-input" placeholder="Search payments..." />
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Payment #</th>
+                            <th>Vendor</th>
+                            <th>Payment Date</th>
+                            <th>Method</th>
+                            <th>Payment Amount</th>
+                            <th>Total Applied</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <a class="link-primary" asp-action="Edit" asp-route-id="@item.Id">@item.PaymentNumber</a>
+                                </td>
+                                <td>@item.Vendor?.BusinessName</td>
+                                <td>@item.PaymentDate.ToString("MM/dd/yyyy")</td>
+                                <td>@item.PaymentMethod</td>
+                                <td>@item.TotalPaymentAmount.ToString("C")</td>
+                                <td>@item.TotalApplied.ToString("C")</td>
+                                <td>
+                                    <span class="status-badge status-@item.Status.ToLower()">@item.Status</span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a class="btn-icon" title="Edit" asp-action="Edit" asp-route-id="@item.Id">
+                                            <i class="icon-edit"></i>
+                                        </a>
+                                        <a class="btn-icon btn-danger" title="Delete" asp-action="Delete" asp-route-id="@item.Id">
+                                            <i class="icon-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

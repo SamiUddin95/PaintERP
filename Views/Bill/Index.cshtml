@@ -1,0 +1,91 @@
+@model PaintERP.Models.ViewModels.PaginatedList<PaintERP.Controllers.BillListItem>
+
+@{
+    ViewData["Title"] = "Bills";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Action"] = "Index";
+}
+
+<link rel="stylesheet" href="~/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Bills</h1>
+            <p class="page-subtitle">Manage vendor bills and payments</p>
+        </div>
+        <div class="header-right">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="icon-plus"></i>
+                New Bill
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">All Bills</div>
+            <div class="card-actions">
+                <input type="text" class="search-input" placeholder="Search bills..." id="billSearch">
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Bill Number</th>
+                        <th>Vendor</th>
+                        <th>Bill Date</th>
+                        <th>Due Date</th>
+                        <th>Total</th>
+                        <th>Balance Due</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var bill in Model)
+                    {
+                        <tr class="data-row">
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@bill.Id" class="link-primary">@bill.BillNumber</a>
+                            </td>
+                            <td>@bill.VendorName</td>
+                            <td>@bill.BillDate.ToString("MM/dd/yyyy")</td>
+                            <td>@(bill.DueDate?.ToString("MM/dd/yyyy") ?? "-")</td>
+                            <td>@bill.GrandTotal.ToString("C")</td>
+                            <td class="@(bill.BalanceDue > 0 ? "text-danger" : "text-success")">@bill.BalanceDue.ToString("C")</td>
+                            <td>
+                                <span class="status-badge status-@bill.Status.ToLower()">@bill.Status</span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a asp-action="Edit" asp-route-id="@bill.Id" class="btn-icon" title="Edit">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@bill.Id" class="btn-icon btn-danger" title="Delete">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <partial name="_Pagination" model="Model" />
+    </div>
+</div>
+
+<script>
+    document.getElementById('billSearch').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('.data-row');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+</script>

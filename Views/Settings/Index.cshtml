@@ -1,0 +1,324 @@
+@model PaintERP.Models.Entities.AppSettings
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Settings</h1>
+            <p class="page-subtitle">Configure company, accounting, integrations, and system preferences</p>
+        </div>
+        <div class="header-right">
+            <button type="submit" form="settingsForm" class="btn btn-primary">
+                <i class="icon-save"></i> Save Settings
+            </button>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <form method="post" id="settingsForm" class="settings-form" asp-action="Index">
+        <div class="tabs">
+            <div class="tab active" onclick="openTab(event, 'company')">Company</div>
+            <div class="tab" onclick="openTab(event, 'accounting')">Accounting</div>
+            <div class="tab" onclick="openTab(event, 'templates')">Templates</div>
+            <div class="tab" onclick="openTab(event, 'sequences')">Number Sequences</div>
+            <div class="tab" onclick="openTab(event, 'integrations')">Integrations</div>
+            <div class="tab" onclick="openTab(event, 'backup')">Backup & Restore</div>
+        </div>
+
+        <!-- Company Information -->
+        <div id="company" class="tab-content active">
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Company Information</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="CompanyName">Company Name</label>
+                            <input class="form-control" asp-for="CompanyName" />
+                            <span asp-validation-for="CompanyName" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="CompanyPhone">Phone</label>
+                            <input class="form-control" asp-for="CompanyPhone" />
+                            <span asp-validation-for="CompanyPhone" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="CompanyEmail">Email</label>
+                            <input type="email" class="form-control" asp-for="CompanyEmail" />
+                            <span asp-validation-for="CompanyEmail" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="CompanyTaxId">Tax ID</label>
+                            <input class="form-control" asp-for="CompanyTaxId" />
+                            <span asp-validation-for="CompanyTaxId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="CompanyAddress">Address</label>
+                            <textarea class="form-control" rows="3" asp-for="CompanyAddress"></textarea>
+                            <span asp-validation-for="CompanyAddress" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="CompanyLogoUrl">Logo URL</label>
+                            <input class="form-control" asp-for="CompanyLogoUrl" />
+                            <span asp-validation-for="CompanyLogoUrl" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="FiscalYearStart">Fiscal Year Start</label>
+                            <input class="form-control" placeholder="MM-DD" asp-for="FiscalYearStart" />
+                            <span asp-validation-for="FiscalYearStart" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="FiscalYearEnd">Fiscal Year End</label>
+                            <input class="form-control" placeholder="MM-DD" asp-for="FiscalYearEnd" />
+                            <span asp-validation-for="FiscalYearEnd" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounting Preferences -->
+        <div id="accounting" class="tab-content">
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Accounting & Tax</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="DefaultCurrency">Default Currency</label>
+                            <input class="form-control" asp-for="DefaultCurrency" />
+                            <span asp-validation-for="DefaultCurrency" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Currencies">Currencies</label>
+                            <input class="form-control" placeholder="USD,EUR,GBP" asp-for="Currencies" />
+                            <span asp-validation-for="Currencies" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="AccountingMethod">Accounting Method</label>
+                            <select class="form-control" asp-for="AccountingMethod">
+                                <option>Accrual</option>
+                                <option>Cash</option>
+                            </select>
+                            <span asp-validation-for="AccountingMethod" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="DefaultPaymentTerms">Default Payment Terms</label>
+                            <select class="form-control" asp-for="DefaultPaymentTerms">
+                                <option>Due on Receipt</option>
+                                <option>Net 15</option>
+                                <option>Net 30</option>
+                                <option>Net 45</option>
+                                <option>Net 60</option>
+                            </select>
+                            <span asp-validation-for="DefaultPaymentTerms" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="DefaultTaxCode">Default Tax Code</label>
+                            <input class="form-control" asp-for="DefaultTaxCode" />
+                            <span asp-validation-for="DefaultTaxCode" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="DefaultTaxPercent">Default Tax Percent</label>
+                            <input type="number" step="0.01" class="form-control" asp-for="DefaultTaxPercent" />
+                            <span asp-validation-for="DefaultTaxPercent" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="ShippingCarriers">Shipping Carriers</label>
+                            <input class="form-control" placeholder="UPS;FedEx;USPS;DHL" asp-for="ShippingCarriers" />
+                            <span asp-validation-for="ShippingCarriers" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="BarcodeType">Barcode Type</label>
+                            <select class="form-control" asp-for="BarcodeType">
+                                <option>Code128</option>
+                                <option>Code39</option>
+                                <option>QRCode</option>
+                                <option>UPC</option>
+                            </select>
+                            <span asp-validation-for="BarcodeType" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ApprovalWorkflow">Approval Workflow</label>
+                        <textarea class="form-control" rows="4" placeholder="Describe approval workflow rules" asp-for="ApprovalWorkflow"></textarea>
+                        <span asp-validation-for="ApprovalWorkflow" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Templates -->
+        <div id="templates" class="tab-content">
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Email & Invoice Templates</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label asp-for="InvoiceEmailTemplate">Invoice Email Template</label>
+                        <textarea class="form-control" rows="6" placeholder="Enter invoice email template" asp-for="InvoiceEmailTemplate"></textarea>
+                        <span asp-validation-for="InvoiceEmailTemplate" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="PaymentReceiptTemplate">Payment Receipt Template</label>
+                        <textarea class="form-control" rows="6" placeholder="Enter payment receipt template" asp-for="PaymentReceiptTemplate"></textarea>
+                        <span asp-validation-for="PaymentReceiptTemplate" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="PurchaseOrderEmailTemplate">Purchase Order Email Template</label>
+                        <textarea class="form-control" rows="6" placeholder="Enter PO email template" asp-for="PurchaseOrderEmailTemplate"></textarea>
+                        <span asp-validation-for="PurchaseOrderEmailTemplate" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Number Sequences -->
+        <div id="sequences" class="tab-content">
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Number Sequences</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="InvoiceNumberPrefix">Invoice Number Prefix</label>
+                            <input class="form-control" asp-for="InvoiceNumberPrefix" />
+                            <span asp-validation-for="InvoiceNumberPrefix" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="PurchaseOrderNumberPrefix">Purchase Order Prefix</label>
+                            <input class="form-control" asp-for="PurchaseOrderNumberPrefix" />
+                            <span asp-validation-for="PurchaseOrderNumberPrefix" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="BillNumberPrefix">Bill Number Prefix</label>
+                            <input class="form-control" asp-for="BillNumberPrefix" />
+                            <span asp-validation-for="BillNumberPrefix" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="TransferNumberPrefix">Transfer Number Prefix</label>
+                            <input class="form-control" asp-for="TransferNumberPrefix" />
+                            <span asp-validation-for="TransferNumberPrefix" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integrations -->
+        <div id="integrations" class="tab-content">
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">API Integrations</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="QuickBooksApiKey">QuickBooks API Key</label>
+                            <input class="form-control" placeholder="Enter QuickBooks API key" asp-for="QuickBooksApiKey" />
+                            <span asp-validation-for="QuickBooksApiKey" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="ShopifyApiKey">Shopify API Key</label>
+                            <input class="form-control" placeholder="Enter Shopify API key" asp-for="ShopifyApiKey" />
+                            <span asp-validation-for="ShopifyApiKey" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="AmazonApiKey">Amazon API Key</label>
+                            <input class="form-control" placeholder="Enter Amazon API key" asp-for="AmazonApiKey" />
+                            <span asp-validation-for="AmazonApiKey" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="UpsApiKey">UPS API Key</label>
+                            <input class="form-control" placeholder="Enter UPS API key" asp-for="UpsApiKey" />
+                            <span asp-validation-for="UpsApiKey" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="FedExApiKey">FedEx API Key</label>
+                            <input class="form-control" placeholder="Enter FedEx API key" asp-for="FedExApiKey" />
+                            <span asp-validation-for="FedExApiKey" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="UspsApiKey">USPS API Key</label>
+                            <input class="form-control" placeholder="Enter USPS API key" asp-for="UspsApiKey" />
+                            <span asp-validation-for="UspsApiKey" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Backup & Restore -->
+        <div id="backup" class="tab-content">
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Backup & Restore</div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Create or restore system backups. (Backup functionality to be implemented with storage integration.)</p>
+                    <div class="form-actions mt-3">
+                        <button type="button" class="btn btn-secondary" disabled>
+                            <i class="icon-download-cloud"></i> Backup Now
+                        </button>
+                        <button type="button" class="btn btn-secondary" disabled>
+                            <i class="icon-upload-cloud"></i> Restore Backup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    function openTab(evt, tabId) {
+        const contents = document.getElementsByClassName('tab-content');
+        for (let i = 0; i < contents.length; i++) {
+            contents[i].classList.remove('active');
+        }
+
+        const tabs = document.getElementsByClassName('tab');
+        for (let i = 0; i < tabs.length; i++) {
+            tabs[i].classList.remove('active');
+        }
+
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

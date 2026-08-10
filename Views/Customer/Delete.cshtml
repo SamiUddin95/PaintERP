@@ -1,0 +1,51 @@
+@model PaintERP.Models.Entities.Customer
+@{
+    ViewData["Title"] = "Delete Customer";
+}
+
+<section class="customer-delete-wrapper">
+    <div class="delete-card">
+        <div class="delete-header">
+            <h1>Delete Customer</h1>
+            <p>Are you sure you want to delete this customer? This action cannot be undone.</p>
+        </div>
+
+        <div class="customer-summary">
+            <div class="summary-item">
+                <span>Customer ID</span>
+                <strong>@Model.CustomerId</strong>
+            </div>
+            <div class="summary-item">
+                <span>Business Name</span>
+                <strong>@Model.BusinessName</strong>
+            </div>
+            <div class="summary-item">
+                <span>Customer Type</span>
+                <strong>@Model.CustomerType</strong>
+            </div>
+            <div class="summary-item">
+                <span>Status</span>
+                <strong>@(Model.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="summary-item">
+                <span>Outstanding Balance</span>
+                <strong>@Model.OutstandingBalance.ToString("C")</strong>
+            </div>
+            <div class="summary-item">
+                <span>Lifetime Revenue</span>
+                <strong>@Model.LifetimeRevenue.ToString("C")</strong>
+            </div>
+            <div class="summary-item">
+                <span>Total Sales</span>
+                <strong>@Model.TotalSales.ToString("C")</strong>
+            </div>
+        </div>
+
+        <form asp-controller="Customer" asp-action="Delete" method="post" class="delete-actions">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="danger-btn">Confirm Delete</button>
+            <a asp-action="Index" class="ghost-btn">Cancel</a>
+        </form>
+    </div>
+</section>

@@ -1,0 +1,267 @@
+@model PaintERP.Models.ViewModels.PaintFormulaFormViewModel
+@{
+    ViewData["Title"] = "New Paint Formula";
+    var paintItems = ViewBag.PaintItems as List<PaintERP.Models.Entities.PaintItem> ?? new List<PaintERP.Models.Entities.PaintItem>();
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">New Paint Formula</h1>
+            <p class="page-subtitle">Create a new paint recipe/BOM</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="Index">
+                <i class="icon-arrow-left"></i>
+                Back to Formulas
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="bill-form" asp-action="Create">
+        <div class="bill-layout">
+            <div class="bill-main">
+                <!-- Header -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Formula Header</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" asp-for="FormulaName">Formula Name</label>
+                                <input class="form-control" placeholder="Enter formula name" asp-for="FormulaName" />
+                                <span asp-validation-for="FormulaName" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" asp-for="FormulaCode">Formula Code</label>
+                                <input class="form-control" readonly asp-for="FormulaCode" />
+                                <span asp-validation-for="FormulaCode" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" asp-for="PaintColor">Paint Color</label>
+                                <input class="form-control" placeholder="Enter paint color" asp-for="PaintColor" />
+                                <span asp-validation-for="PaintColor" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" asp-for="Finish">Finish</label>
+                                <select class="form-control" asp-for="Finish">
+                                    <option>Matte</option>
+                                    <option>Satin</option>
+                                    <option>Gloss</option>
+                                    <option>Semi Gloss</option>
+                                </select>
+                                <span asp-validation-for="Finish" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" asp-for="ContainerSize">Container Size</label>
+                                <select class="form-control" asp-for="ContainerSize">
+                                    <option>1 Gallon</option>
+                                    <option>5 Gallon</option>
+                                    <option>55 Gallon Drum</option>
+                                </select>
+                                <span asp-validation-for="ContainerSize" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Status">Status</label>
+                                <select class="form-control" asp-for="Status">
+                                    <option value="Draft">Draft</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Deprecated">Deprecated</option>
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recipe Table -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Recipe / BOM</div>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="addFormulaItem()">
+                            <i class="icon-plus"></i> Add Material
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="items-grid">
+                            <div class="items-header">
+                                <div class="col-material">Raw Material</div>
+                                <div class="col-percent">Percentage</div>
+                                <div class="col-qty">Required Qty</div>
+                                <div class="col-unit">Unit</div>
+                                <div class="col-cost">Unit Cost</div>
+                                <div class="col-inventory">Inventory</div>
+                                <div class="col-action"></div>
+                            </div>
+                            <div id="formulaItemsContainer">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Formula Summary</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <label>Total Formula Cost</label>
+                                <div class="summary-value" id="totalFormulaCost">$0.00</div>
+                            </div>
+                            <div class="summary-item">
+                                <label>Expected Yield</label>
+                                <div class="summary-value" id="expectedYield">0.00</div>
+                            </div>
+                            <div class="summary-item">
+                                <label asp-for="WastePercentage">Waste %</label>
+                                <input type="number" step="0.01" class="form-control" asp-for="WastePercentage" onchange="calculateFormulaSummary()" />
+                                <span asp-validation-for="WastePercentage" class="text-danger"></span>
+                            </div>
+                            <div class="summary-item">
+                                <label asp-for="SellingPrice">Selling Price</label>
+                                <input type="number" step="0.01" class="form-control" asp-for="SellingPrice" onchange="calculateFormulaSummary()" />
+                                <span asp-validation-for="SellingPrice" class="text-danger"></span>
+                            </div>
+                            <div class="summary-item">
+                                <label>Gross Margin</label>
+                                <div class="summary-value" id="grossMargin">0.00%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bill-sidebar">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Actions</div>
+                    </div>
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="icon-save"></i> Save Formula
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    let formulaItemIndex = 0;
+    const paintItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(paintItems.Select(p => new { p.Id, p.Name, p.SKU, p.UnitCost, p.StockQuantity, p.UnitOfMeasure })));
+
+    function addFormulaItem() {
+        const container = document.getElementById('formulaItemsContainer');
+        const itemRow = document.createElement('div');
+        itemRow.className = 'item-row';
+        itemRow.dataset.index = formulaItemIndex;
+
+        let paintItemOptions = '<option value="">Select Material</option>';
+        paintItems.forEach(item => {
+            paintItemOptions += `<option value="${item.id}" data-name="${item.name}" data-cost="${item.unitCost}" data-inventory="${item.stockQuantity}" data-unit="${item.unitOfMeasure}">${item.name} (${item.sku})</option>`;
+        });
+
+        itemRow.innerHTML = `
+            <input type="hidden" name="FormulaItems[${formulaItemIndex}].Id" value="0" />
+            <input type="hidden" name="FormulaItems[${formulaItemIndex}].PaintFormulaId" value="0" />
+            <div class="col-material">
+                <select name="FormulaItems[${formulaItemIndex}].PaintItemId" class="form-control form-control-sm material-select" onchange="updateFormulaItem(this)">
+                    ${paintItemOptions}
+                </select>
+                <input type="hidden" name="FormulaItems[${formulaItemIndex}].RawMaterialName" class="material-name-input" value="" />
+            </div>
+            <div class="col-percent">
+                <input type="number" name="FormulaItems[${formulaItemIndex}].Percentage" step="0.01" class="form-control form-control-sm" value="0" onchange="calculateFormulaSummary()" />
+            </div>
+            <div class="col-qty">
+                <input type="number" name="FormulaItems[${formulaItemIndex}].RequiredQuantity" step="0.01" class="form-control form-control-sm" value="0" onchange="calculateFormulaSummary()" />
+            </div>
+            <div class="col-unit">
+                <input type="text" name="FormulaItems[${formulaItemIndex}].Unit" class="form-control form-control-sm unit-input" value="Each" />
+            </div>
+            <div class="col-cost">
+                <input type="number" name="FormulaItems[${formulaItemIndex}].UnitCost" step="0.01" class="form-control form-control-sm" value="0" onchange="calculateFormulaSummary()" />
+            </div>
+            <div class="col-inventory">
+                <input type="number" name="FormulaItems[${formulaItemIndex}].InventoryAvailable" step="0.01" class="form-control form-control-sm" value="0" readonly />
+            </div>
+            <div class="col-action">
+                <button type="button" class="btn-icon btn-danger" onclick="removeFormulaItem(this)">
+                    <i class="icon-x"></i>
+                </button>
+            </div>
+        `;
+
+        container.appendChild(itemRow);
+        formulaItemIndex++;
+    }
+
+    function removeFormulaItem(button) {
+        const itemRow = button.closest('.item-row');
+        itemRow.remove();
+        calculateFormulaSummary();
+    }
+
+    function updateFormulaItem(select) {
+        const itemRow = select.closest('.item-row');
+        const selectedOption = select.options[select.selectedIndex];
+        const materialNameInput = itemRow.querySelector('.material-name-input');
+        const unitCostInput = itemRow.querySelector('input[name$=".UnitCost"]');
+        const inventoryInput = itemRow.querySelector('input[name$=".InventoryAvailable"]');
+        const unitInput = itemRow.querySelector('.unit-input');
+
+        if (selectedOption.value) {
+            materialNameInput.value = selectedOption.dataset.name || '';
+            unitCostInput.value = selectedOption.dataset.cost || 0;
+            inventoryInput.value = selectedOption.dataset.inventory || 0;
+            unitInput.value = selectedOption.dataset.unit || 'Each';
+        } else {
+            materialNameInput.value = '';
+            unitCostInput.value = 0;
+            inventoryInput.value = 0;
+            unitInput.value = 'Each';
+        }
+        calculateFormulaSummary();
+    }
+
+    function calculateFormulaSummary() {
+        const rows = document.querySelectorAll('.item-row');
+        let totalCost = 0;
+        let totalYield = 0;
+
+        rows.forEach(row => {
+            const qty = parseFloat(row.querySelector('input[name$=".RequiredQuantity"]')?.value) || 0;
+            const cost = parseFloat(row.querySelector('input[name$=".UnitCost"]')?.value) || 0;
+            totalCost += qty * cost;
+            totalYield += qty;
+        });
+
+        const wastePercent = parseFloat(document.querySelector('#WastePercentage')?.value) || 0;
+        const sellingPrice = parseFloat(document.querySelector('#SellingPrice')?.value) || 0;
+
+        const costWithWaste = totalCost * (1 + wastePercent / 100);
+        const grossMargin = sellingPrice > 0 ? ((sellingPrice - costWithWaste) / sellingPrice) * 100 : 0;
+
+        document.getElementById('totalFormulaCost').textContent = '$' + totalCost.toFixed(2);
+        document.getElementById('expectedYield').textContent = totalYield.toFixed(2);
+        document.getElementById('grossMargin').textContent = grossMargin.toFixed(2) + '%';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateFormulaSummary();
+    });
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

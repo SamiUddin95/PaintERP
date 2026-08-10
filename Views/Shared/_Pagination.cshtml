@@ -1,0 +1,87 @@
+@model dynamic
+
+@{
+    var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.HasNextPage ? "disabled" : "";
+    var action = ViewData["Action"]?.ToString() ?? "Index";
+}
+
+<div class="pagination-container">
+    <div class="pagination-info">
+        <span>Showing @((Model.PageIndex - 1) * Model.PageSize + 1) to @(Math.Min(Model.PageIndex * Model.PageSize, Model.TotalCount)) of @Model.TotalCount entries</span>
+    </div>
+    <div class="pagination-controls">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <li class="page-item @prevDisabled">
+                    <a asp-action="@action" asp-route-page="@(Model.PageIndex - 1)"
+                       class="page-link" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    if (i == 1 || i == Model.TotalPages || (i >= Model.PageIndex - 1 && i <= Model.PageIndex + 1))
+                    {
+                        <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                            <a asp-action="@action" asp-route-page="@i"
+                               class="page-link">@i</a>
+                        </li>
+                    }
+                    else if (i == Model.PageIndex - 2 || i == Model.PageIndex + 2)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+                }
+
+                <li class="page-item @nextDisabled">
+                    <a asp-action="@action" asp-route-page="@(Model.PageIndex + 1)"
+                       class="page-link" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="pagination-size">
+        <select id="pageSize" onchange="changePageSize(this.value)" class="form-control form-control-sm">
+            @if (Model.PageSize == 10)
+            {
+                <option value="10" selected>10</option>
+            }
+            else
+            {
+                <option value="10">10</option>
+            }
+            @if (Model.PageSize == 25)
+            {
+                <option value="25" selected>25</option>
+            }
+            else
+            {
+                <option value="25">25</option>
+            }
+            @if (Model.PageSize == 50)
+            {
+                <option value="50" selected>50</option>
+            }
+            else
+            {
+                <option value="50">50</option>
+            }
+        </select>
+        <span>per page</span>
+    </div>
+</div>
+
+<script>
+    function changePageSize(pageSize) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('pageSize', pageSize);
+        url.searchParams.set('page', 1);
+        window.location.href = url.toString();
+    }
+</script>

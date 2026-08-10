@@ -1,0 +1,124 @@
+@model PaintERP.Models.ViewModels.VendorListViewModel
+@{
+    ViewData["Title"] = "Vendor Management";
+    ViewData["Action"] = "Index";
+}
+
+<section class="vendor-module">
+    <div class="vendor-header">
+        <div>
+            <h1>Vendor Management</h1>
+            <p>Manage supplier relationships, contracts, and payment terms across all facilities.</p>
+        </div>
+        <a asp-action="Create" class="primary-btn">
+            <span>+</span> Add New Vendor
+        </a>
+    </div>
+
+    <div class="vendor-stats">
+        <div class="stat-card">
+            <span>Total Vendors</span>
+            <strong>@Model.TotalCount</strong>
+            <small>@Model.ActiveCount active</small>
+        </div>
+        <div class="stat-card">
+            <span>Outstanding Balance</span>
+            <strong>@Model.TotalOutstanding.ToString("C")</strong>
+            <small>Across all vendors</small>
+        </div>
+        <div class="stat-card">
+            <span>Active</span>
+            <strong>@Model.ActiveCount</strong>
+            <small>@Model.InactiveCount inactive</small>
+        </div>
+    </div>
+
+    <div class="vendor-toolbar">
+        <div class="filters">
+            <input type="search" placeholder="Search vendor name, ID, email..." value="@Model.SearchTerm" />
+            <select>
+                <option selected="@(Model.FilterStatus == "All")">All Status</option>
+                <option selected="@(Model.FilterStatus == "Active")">Active</option>
+                <option selected="@(Model.FilterStatus == "Inactive")">Inactive</option>
+            </select>
+            <select>
+                <option selected="@(Model.FilterType == "All")">All Types</option>
+                <option selected="@(Model.FilterType == "Supplier")">Supplier</option>
+                <option selected="@(Model.FilterType == "Manufacturer")">Manufacturer</option>
+                <option selected="@(Model.FilterType == "Distributor")">Distributor</option>
+                <option selected="@(Model.FilterType == "Contractor")">Contractor</option>
+            </select>
+        </div>
+        <button class="ghost">Export</button>
+    </div>
+
+    <div class="vendor-table-card">
+        <table class="vendor-table">
+            <thead>
+                <tr>
+                    <th>Vendor</th>
+                    <th>Type</th>
+                    <th>Contact</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Outstanding</th>
+                    <th>Rating</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var vendor in Model.Vendors)
+                {
+                    var statusClass = vendor.IsActive ? "status-active" : "status-inactive";
+                    var ratingStars = string.Concat(Enumerable.Repeat("★", vendor.Rating)) + string.Concat(Enumerable.Repeat("☆", 5 - vendor.Rating));
+                    <tr>
+                        <td>
+                            <div class="vendor-cell">
+                                <span class="vendor-id">@vendor.VendorId</span>
+                                <span class="vendor-name">@vendor.BusinessName</span>
+                                @if (vendor.IsPreferredVendor)
+                                {
+                                    <span class="preferred-badge">Preferred</span>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <span class="vendor-type">@vendor.VendorType</span>
+                            <small>@vendor.VendorCategory</small>
+                        </td>
+                        <td>
+                            <span class="contact-email">@vendor.ContactEmail</span>
+                            <small>@vendor.ContactPhone</small>
+                        </td>
+                        <td>
+                            <span>@vendor.BusinessCity</span>
+                            <small>@vendor.BusinessState</small>
+                        </td>
+                        <td>
+                            <span class="status-chip @statusClass">@(vendor.IsActive ? "Active" : "Inactive")</span>
+                        </td>
+                        <td>
+                            <span class="amount">@vendor.OutstandingAmount.ToString("C")</span>
+                        </td>
+                        <td>
+                            <span class="rating">@ratingStars</span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <a asp-action="Edit" asp-route-id="@vendor.Id" class="action-btn" title="Edit">✏️</a>
+                                <a asp-action="Delete" asp-route-id="@vendor.Id" class="action-btn danger" title="Delete">🗑️</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pagination" model="Model.Vendors" />
+</section>
+
+@{
+    ViewData["searchTerm"] = Model.SearchTerm;
+    ViewData["filterStatus"] = Model.FilterStatus;
+    ViewData["filterType"] = Model.FilterType;
+}

@@ -1,0 +1,117 @@
+@model PaintERP.Models.Entities.Bill
+
+@{
+    ViewData["Title"] = "Delete Bill";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Delete Bill</h1>
+            <p class="page-subtitle">Are you sure you want to delete this bill?</p>
+        </div>
+        <div class="header-right">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="icon-arrow-left"></i>
+                Back to Bills
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">Bill Details</div>
+        </div>
+        <div class="card-body">
+            <div class="delete-confirmation">
+                <div class="warning-icon">
+                    <i class="icon-alert-triangle"></i>
+                </div>
+                <div class="warning-text">
+                    <h3>Warning: This action cannot be undone</h3>
+                    <p>Deleting this bill will permanently remove it from the system.</p>
+                </div>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <label>Bill Number:</label>
+                    <div class="detail-value">@Model.BillNumber</div>
+                </div>
+                <div class="detail-item">
+                    <label>Vendor:</label>
+                    <div class="detail-value">@Model.Vendor?.BusinessName</div>
+                </div>
+                <div class="detail-item">
+                    <label>Bill Date:</label>
+                    <div class="detail-value">@Model.BillDate.ToString("MM/dd/yyyy")</div>
+                </div>
+                <div class="detail-item">
+                    <label>Due Date:</label>
+                    <div class="detail-value">@(Model.DueDate?.ToString("MM/dd/yyyy") ?? "N/A")</div>
+                </div>
+                <div class="detail-item">
+                    <label>Grand Total:</label>
+                    <div class="detail-value">@Model.GrandTotal.ToString("C")</div>
+                </div>
+                <div class="detail-item">
+                    <label>Balance Due:</label>
+                    <div class="detail-value">@Model.BalanceDue.ToString("C")</div>
+                </div>
+                <div class="detail-item">
+                    <label>Status:</label>
+                    <div class="detail-value">
+                        <span class="status-badge status-@Model.Status.ToLower()">@Model.Status</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <label>Paid:</label>
+                    <div class="detail-value">@(Model.IsPaid ? "Yes" : "No")</div>
+                </div>
+            </div>
+
+            @if (Model.BillItems.Any())
+            {
+                <div class="items-summary">
+                    <h4>Line Items (@Model.BillItems.Count)</h4>
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Unit Cost</th>
+                                <th>Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.BillItems)
+                            {
+                                <tr>
+                                    <td>@item.Description</td>
+                                    <td>@item.Quantity</td>
+                                    <td>@item.UnitCost.ToString("C")</td>
+                                    <td>@item.LineTotal.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <form asp-action="Delete" method="post" class="delete-form">
+                <input type="hidden" asp-for="Id">
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="icon-trash"></i> Delete Bill
+                    </button>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-secondary">
+                        <i class="icon-x"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,764 @@
+@model PaintERP.Models.ViewModels.SalesInvoiceFormViewModel
+@{
+    ViewData["Title"] = "Edit Sales Invoice";
+
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Draft" => "badge-secondary",
+            "Sent" => "badge-info",
+            "Paid" => "badge-success",
+            "Partially Paid" => "badge-warning",
+            "Overdue" => "badge-danger",
+            "Void" => "badge-dark",
+            _ => "badge-secondary"
+        };
+    }
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+<style>
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .badge-secondary { background-color: #6c757d; color: white; }
+    .badge-info { background-color: #17a2b8; color: white; }
+    .badge-success { background-color: #28a745; color: white; }
+    .badge-warning { background-color: #ffc107; color: #212529; }
+    .badge-danger { background-color: #dc3545; color: white; }
+    .badge-dark { background-color: #343a40; color: white; }
+
+    .payment-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .payment-summary {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .payment-summary-item {
+        background: white;
+        padding: 1rem;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+    }
+
+    .payment-summary-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .payment-summary-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .modal-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .modal-footer {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+</style>
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Edit Sales Invoice</h1>
+            <p class="page-subtitle">
+                @Model.InvoiceNumber - @Model.GrandTotal.ToString("C")
+                <span class="status-badge @GetStatusBadgeClass(Model.Status)">@Model.Status</span>
+            </p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="Index">
+                <i class="icon-arrow-left"></i>
+                Back to Invoices
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="bill-form" asp-action="Edit">
+        <input type="hidden" asp-for="Id" />
+        <div class="bill-layout">
+            <div class="bill-main">
+                <!-- Invoice Header -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Invoice Header</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="CustomerId" class="required">Customer</label>
+                                <select asp-for="CustomerId" class="form-control" asp-items="@(new SelectList(Model.Customers, "Id", "BusinessName"))">
+                                    <option value="">Select Customer</option>
+                                </select>
+                                <span asp-validation-for="CustomerId" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="InvoiceNumber">Invoice Number</label>
+                                <input asp-for="InvoiceNumber" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="InvoiceDate" class="required">Invoice Date</label>
+                                <input asp-for="InvoiceDate" type="date" class="form-control" />
+                                <span asp-validation-for="InvoiceDate" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="DueDate">Due Date</label>
+                                <input asp-for="DueDate" type="date" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="Salesperson" class="required">Salesperson</label>
+                                <input asp-for="Salesperson" class="form-control" placeholder="Enter salesperson name" />
+                                <span asp-validation-for="Salesperson" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="WarehouseId">Warehouse</label>
+                                <select asp-for="WarehouseId" class="form-control" asp-items="@(new SelectList(Model.Warehouses, "Id", "Name"))">
+                                    <option value="">Select Warehouse</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="ShippingMethod" class="required">Shipping Method</label>
+                                <select asp-for="ShippingMethod" class="form-control" asp-items="@(new SelectList(Model.ShippingMethods))">
+                                </select>
+                                <span asp-validation-for="ShippingMethod" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="TrackingNumber" class="required">Tracking Number</label>
+                                <input asp-for="TrackingNumber" class="form-control" placeholder="Enter tracking number" />
+                                <span asp-validation-for="TrackingNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="PaymentTerms" class="required">Payment Terms</label>
+                                <select asp-for="PaymentTerms" class="form-control" asp-items="@(new SelectList(Model.PaymentTermsOptions))">
+                                </select>
+                                <span asp-validation-for="PaymentTerms" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="ReferenceNumber" class="required">Reference Number</label>
+                                <input asp-for="ReferenceNumber" class="form-control" placeholder="Enter reference" />
+                                <span asp-validation-for="ReferenceNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Grid -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Invoice Items</div>
+                        <div class="card-actions">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="addInvoiceItem()">
+                                <i class="icon-plus"></i> Add Item
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLastInvoiceItemRow()">
+                                <i class="icon-trash"></i> Delete Row
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="items-grid-scroll">
+                        <table class="items-table items-table-invoice" id="invoiceItemsTable">
+                            <colgroup>
+                                <col style="width:90px">
+                                <col>
+                                <col style="width:95px">
+                                <col style="width:95px">
+                                <col style="width:110px">
+                                <col style="width:110px">
+                                <col style="width:95px">
+                                <col style="width:100px">
+                                <col style="width:38px">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="col-item">SKU</th>
+                                    <th class="col-desc">Description</th>
+                                    <th class="col-qty">Qty</th>
+                                    <th class="col-unit">Unit</th>
+                                    <th class="col-price">Price</th>
+                                    <th class="col-discount">Discount %</th>
+                                    <th class="col-tax">Tax %</th>
+                                    <th class="col-total">Line Total</th>
+                                    <th class="col-action"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoiceItemsContainer">
+                                @for (int i = 0; i < Model.SalesInvoiceItems.Count; i++)
+                                {
+                                    <tr class="item-row" data-index="@i">
+                                        <td class="col-item">
+                                            <input type="hidden" asp-for="SalesInvoiceItems[i].Id" />
+                                            <input type="hidden" asp-for="SalesInvoiceItems[i].SalesInvoiceId" />
+                                            <input asp-for="SalesInvoiceItems[i].SKU" class="form-control form-control-sm sku-input" placeholder="SKU" />
+                                        </td>
+                                        <td class="col-desc">
+                                            <select asp-for="SalesInvoiceItems[i].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateInvoiceItemFromPaintItem(this)" asp-items="@(new SelectList(Model.PaintItems, "Id", "Name", Model.SalesInvoiceItems[i].PaintItemId))">
+                                                <option value="">Select Item</option>
+                                            </select>
+                                            <input type="hidden" asp-for="SalesInvoiceItems[i].Description" class="description-input" />
+                                        </td>
+                                        <td class="col-qty">
+                                            <input asp-for="SalesInvoiceItems[i].Quantity" type="number" step="0.01" class="form-control form-control-sm quantity" onchange="calculateInvoiceLine(this)" />
+                                        </td>
+                                        <td class="col-unit">
+                                            <select asp-for="SalesInvoiceItems[i].Unit" class="form-control form-control-sm" asp-items="@(new SelectList(Model.Units))">
+                                            </select>
+                                        </td>
+                                        <td class="col-price">
+                                            <input asp-for="SalesInvoiceItems[i].UnitPrice" type="number" step="0.01" class="form-control form-control-sm unit-price" onchange="calculateInvoiceLine(this)" />
+                                        </td>
+                                        <td class="col-discount">
+                                            <input asp-for="SalesInvoiceItems[i].DiscountPercent" type="number" step="0.01" class="form-control form-control-sm discount-percent" onchange="calculateInvoiceLine(this)" />
+                                        </td>
+                                        <td class="col-tax">
+                                            <input asp-for="SalesInvoiceItems[i].TaxPercent" type="number" step="0.01" class="form-control form-control-sm tax-percent" onchange="calculateInvoiceLine(this)" />
+                                        </td>
+                                        <td class="col-total">
+                                            <input asp-for="SalesInvoiceItems[i].LineTotal" type="number" step="0.01" class="form-control form-control-sm line-total" readonly />
+                                        </td>
+                                        <td class="col-action">
+                                            <button type="button" class="btn-icon btn-danger" onclick="removeInvoiceItem(this)">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Summary</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="Subtotal">Subtotal</label>
+                                <input asp-for="Subtotal" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="DiscountAmount">Discount</label>
+                                <input asp-for="DiscountAmount" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="ShippingCost">Shipping</label>
+                                <input asp-for="ShippingCost" type="number" step="0.01" class="form-control" onchange="calculateInvoiceSummary()" />
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="SalesTaxAmount">Sales Tax</label>
+                                <input asp-for="SalesTaxAmount" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="GrandTotal">Grand Total</label>
+                                <input asp-for="GrandTotal" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="AmountPaid">Amount Paid</label>
+                                <input asp-for="AmountPaid" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="BalanceDue">Balance Due</label>
+                                <input asp-for="BalanceDue" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes & Attachments -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Notes & Attachments</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="AttachmentUrl">Attachment URL</label>
+                            <input asp-for="AttachmentUrl" class="form-control" placeholder="Enter attachment URL" />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="CustomerNotes">Customer Notes</label>
+                                <textarea asp-for="CustomerNotes" class="form-control" rows="2" placeholder="Notes visible to customer"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="InternalNotes">Internal Notes</label>
+                                <textarea asp-for="InternalNotes" class="form-control" rows="2" placeholder="Internal notes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment History -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Payment History</div>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.CustomerPaymentInvoices != null && Model.CustomerPaymentInvoices.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover" style="font-size: 13px;">
+                                    <thead style="background: #f8f9fa;">
+                                        <tr>
+                                            <th style="font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; padding: 12px;">Receipt #</th>
+                                            <th style="font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; padding: 12px;">Date</th>
+                                            <th style="font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; padding: 12px;">Method</th>
+                                            <th style="font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; text-align: right; padding: 12px;">Amount</th>
+                                            <th style="font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; text-align: right; padding: 12px;">Balance</th>
+                                            <th style="font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; text-align: center; padding: 12px;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var paymentInvoice in Model.CustomerPaymentInvoices.OrderByDescending(p => p.CustomerPayment.PaymentDate))
+                                        {
+                                            <tr style="background: @(paymentInvoice.RemainingBalance == 0 ? "#f0fff4" : "white");">
+                                                <td style="font-weight: 500; color: #212529; padding: 12px;">@paymentInvoice.CustomerPayment.PaymentNumber</td>
+                                                <td style="color: #6c757d; padding: 12px;">@paymentInvoice.CustomerPayment.PaymentDate.ToString("MMM dd, yyyy")</td>
+                                                <td style="padding: 12px;">
+                                                    <span class="badge" style="background: #e9ecef; color: #495057; font-size: 11px; padding: 4px 8px; border-radius: 4px;">@paymentInvoice.CustomerPayment.PaymentMethod</span>
+                                                </td>
+                                                <td style="text-align: right; font-weight: 600; color: #28a745; padding: 12px;">@paymentInvoice.PaymentApplied.ToString("C")</td>
+                                                <td style="text-align: right; font-weight: 600; color: @(paymentInvoice.RemainingBalance > 0 ? "#dc3545" : "#28a745"); padding: 12px;">@paymentInvoice.RemainingBalance.ToString("C")</td>
+                                                <td style="text-align: center; padding: 12px;">
+                                                    <a asp-action="PaymentReceipt" asp-route-id="@paymentInvoice.Id" target="_blank" class="btn btn-sm" style="background: #007bff; color: white; border: none; padding: 4px 12px; font-size: 12px; border-radius: 4px;">
+                                                        <i class="icon-printer"></i> Receipt
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div style="text-align: center; padding: 30px; background: #f8f9fa; border-radius: 8px; border: 1px dashed #dee2e6;">
+                                <i class="icon-dollar-sign" style="font-size: 32px; color: #adb5bd; margin-bottom: 10px;"></i>
+                                <p style="color: #6c757d; margin: 0; font-size: 14px;">No payments received yet</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="bill-sidebar">
+                <!-- Payment Summary -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Payment Summary</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="payment-summary">
+                            <div class="payment-summary-item">
+                                <div class="payment-summary-label">Total Amount</div>
+                                <div class="payment-summary-value">@Model.GrandTotal.ToString("C")</div>
+                            </div>
+                            <div class="payment-summary-item">
+                                <div class="payment-summary-label">Amount Paid</div>
+                                <div class="payment-summary-value" style="color: #28a745;">@Model.AmountPaid.ToString("C")</div>
+                            </div>
+                            <div class="payment-summary-item">
+                                <div class="payment-summary-label">Balance Due</div>
+                                <div class="payment-summary-value" style="color: @(Model.BalanceDue > 0 ? "#dc3545" : "#28a745");">@Model.BalanceDue.ToString("C")</div>
+                            </div>
+                            <div class="payment-summary-item">
+                                <div class="payment-summary-label">Payment Status</div>
+                                <div class="payment-summary-value">
+                                    <span class="status-badge @GetStatusBadgeClass(Model.Status)">@Model.Status</span>
+                                </div>
+                            </div>
+                        </div>
+                        @if (Model.BalanceDue > 0 && !Model.IsVoided)
+                        {
+                            <button type="button" class="btn btn-success btn-block" onclick="openPaymentModal()">
+                                <i class="icon-dollar-sign"></i> Receive Payment
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Invoice Status -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Invoice Status</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="Status">Current Status</label>
+                            <select asp-for="Status" class="form-control" asp-items="@(new SelectList(Model.StatusOptions))" disabled>
+                            </select>
+                            <small class="form-text text-muted">Status is automatically managed based on payments and due dates</small>
+                        </div>
+                        @if (Model.DueDate.HasValue)
+                        {
+                            <div class="form-group">
+                                <label>Due Date</label>
+                                <div class="form-control-plaintext">@Model.DueDate.Value.ToString("d")</div>
+                                @if (Model.DueDate.Value < DateTime.UtcNow.Date && !Model.IsPaid && !Model.IsVoided)
+                                {
+                                    <small class="form-text text-danger">This invoice is overdue</small>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Quick Actions</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions-list">
+                            <button type="submit" class="btn btn-block btn-primary">
+                                <i class="icon-save"></i> Save Changes
+                            </button>
+                            <a asp-action="EmailInvoice" asp-route-id="@Model.Id" class="btn btn-block btn-outline-secondary">
+                                <i class="icon-mail"></i> Email Invoice
+                            </a>
+                            <a asp-action="PrintInvoice" asp-route-id="@Model.Id" target="_blank" class="btn btn-block btn-outline-secondary">
+                                <i class="icon-printer"></i> Print Invoice
+                            </a>
+                            @if (!Model.IsVoided && !Model.IsPaid)
+                            {
+                                <button type="button" class="btn btn-block btn-warning" onclick="openVoidModal()">
+                                    <i class="icon-slash"></i> Void Invoice
+                                </button>
+                            }
+                            else if (Model.IsPaid)
+                            {
+                                <button type="button" class="btn btn-block btn-warning" disabled title="Cannot void a paid invoice">
+                                    <i class="icon-slash"></i> Void Invoice
+                                </button>
+                            }
+                            <a asp-action="Index" class="btn btn-block btn-outline-secondary">
+                                <i class="icon-x"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">Receive Payment</div>
+        <form method="post" asp-action="ReceivePayment" asp-route-id="@Model.Id">
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <label>Balance Due</label>
+                <div class="form-control-plaintext" style="font-size: 1.25rem; font-weight: 600;">@Model.BalanceDue.ToString("C")</div>
+            </div>
+            <div class="form-group">
+                <label for="paymentAmount">Payment Amount</label>
+                <input type="number" id="paymentAmount" name="paymentAmount" step="0.01" class="form-control" placeholder="Enter payment amount" required max="@Model.BalanceDue" />
+                <small class="form-text text-muted">Maximum payment: @Model.BalanceDue.ToString("C")</small>
+            </div>
+            <div class="form-group">
+                <label for="paymentMethod">Payment Method</label>
+                <select id="paymentMethod" name="paymentMethod" class="form-control" required>
+                    <option value="">Select Payment Method</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Check">Check</option>
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Wire">Wire Transfer</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="paymentReference">Reference Number (Optional)</label>
+                <input type="text" id="paymentReference" name="paymentReference" class="form-control" placeholder="Check number, transaction ID, etc." />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePaymentModal()">Cancel</button>
+                <button type="submit" class="btn btn-success">Receive Payment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Void Modal -->
+<div id="voidModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">Void Invoice</div>
+        <form method="post" asp-action="VoidInvoice" asp-route-id="@Model.Id">
+            @Html.AntiForgeryToken()
+            <div class="alert alert-warning">
+                <strong>Warning:</strong> Voiding an invoice cannot be undone. This will mark the invoice as void and reverse any accounting entries.
+            </div>
+            <div class="form-group">
+                <label for="voidReason">Reason for Voiding</label>
+                <textarea id="voidReason" name="voidReason" class="form-control" rows="3" placeholder="Please provide a reason for voiding this invoice" required></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeVoidModal()">Cancel</button>
+                <button type="submit" class="btn btn-warning">Void Invoice</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let invoiceItemIndex = @Model.SalesInvoiceItems.Count;
+
+    function addInvoiceItem() {
+        const container = document.getElementById('invoiceItemsContainer');
+        const index = invoiceItemIndex++;
+
+        const paintItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaintItems));
+        const units = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Units));
+
+        let paintItemOptions = '<option value="">Select Item</option>';
+        paintItems.forEach(item => {
+            paintItemOptions += `<option value="${item.Id}" data-sku="${item.SKU}" data-name="${item.Name}" data-price="${item.SellingPrice}" data-unit="${item.UnitOfMeasure}">${item.Name}</option>`;
+        });
+
+        let unitOptions = '';
+        units.forEach(unit => {
+            unitOptions += `<option value="${unit}">${unit}</option>`;
+        });
+
+        const itemHtml = `
+            <tr class="item-row" data-index="${index}">
+                <td class="col-item">
+                    <input type="hidden" name="SalesInvoiceItems[${index}].Id" value="0" />
+                    <input type="hidden" name="SalesInvoiceItems[${index}].SalesInvoiceId" value="@Model.Id" />
+                    <input type="text" name="SalesInvoiceItems[${index}].SKU" class="form-control form-control-sm sku-input" placeholder="SKU" />
+                </td>
+                <td class="col-desc">
+                    <select name="SalesInvoiceItems[${index}].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateInvoiceItemFromPaintItem(this)">
+                        ${paintItemOptions}
+                    </select>
+                    <input type="hidden" name="SalesInvoiceItems[${index}].Description" class="description-input" value="" />
+                </td>
+                <td class="col-qty">
+                    <input type="number" name="SalesInvoiceItems[${index}].Quantity" step="0.01" class="form-control form-control-sm quantity" value="1" onchange="calculateInvoiceLine(this)" />
+                </td>
+                <td class="col-unit">
+                    <select name="SalesInvoiceItems[${index}].Unit" class="form-control form-control-sm">
+                        ${unitOptions}
+                    </select>
+                </td>
+                <td class="col-price">
+                    <input type="number" name="SalesInvoiceItems[${index}].UnitPrice" step="0.01" class="form-control form-control-sm unit-price" value="0" onchange="calculateInvoiceLine(this)" />
+                </td>
+                <td class="col-discount">
+                    <input type="number" name="SalesInvoiceItems[${index}].DiscountPercent" step="0.01" class="form-control form-control-sm discount-percent" value="0" onchange="calculateInvoiceLine(this)" />
+                </td>
+                <td class="col-tax">
+                    <input type="number" name="SalesInvoiceItems[${index}].TaxPercent" step="0.01" class="form-control form-control-sm tax-percent" value="0" onchange="calculateInvoiceLine(this)" />
+                </td>
+                <td class="col-total">
+                    <input type="number" name="SalesInvoiceItems[${index}].LineTotal" step="0.01" class="form-control form-control-sm line-total" value="0" readonly />
+                </td>
+                <td class="col-action">
+                    <button type="button" class="btn-icon btn-danger" onclick="removeInvoiceItem(this)">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+
+        container.insertAdjacentHTML('beforeend', itemHtml);
+    }
+
+    function removeInvoiceItem(button) {
+        const itemRow = button.closest('.item-row');
+        itemRow.remove();
+        calculateInvoiceSummary();
+    }
+
+    function removeLastInvoiceItemRow() {
+        const rows = document.querySelectorAll('#invoiceItemsContainer .item-row');
+        if (!rows.length) {
+            return;
+        }
+
+        rows[rows.length - 1].remove();
+        calculateInvoiceSummary();
+    }
+
+    function updateInvoiceItemFromPaintItem(select) {
+        const itemRow = select.closest('.item-row');
+        const selectedOption = select.options[select.selectedIndex];
+        const skuInput = itemRow.querySelector('.sku-input');
+        const descriptionInput = itemRow.querySelector('.description-input');
+        const unitPriceInput = itemRow.querySelector('.unit-price');
+        const unitSelect = itemRow.querySelector('select[name*="Unit"]');
+
+        if (selectedOption.value) {
+            skuInput.value = selectedOption.dataset.sku || '';
+            descriptionInput.value = selectedOption.dataset.name || '';
+            unitPriceInput.value = selectedOption.dataset.price || 0;
+            if (unitSelect) {
+                unitSelect.value = selectedOption.dataset.unit || 'Each';
+            }
+        } else {
+            skuInput.value = '';
+            descriptionInput.value = '';
+            unitPriceInput.value = 0;
+        }
+
+        calculateInvoiceLine(select);
+    }
+
+    function calculateInvoiceLine(input) {
+        const itemRow = input.closest('.item-row');
+        const quantity = parseFloat(itemRow.querySelector('.quantity').value) || 0;
+        const unitPrice = parseFloat(itemRow.querySelector('.unit-price').value) || 0;
+        const discountPercent = parseFloat(itemRow.querySelector('.discount-percent').value) || 0;
+        const taxPercent = parseFloat(itemRow.querySelector('.tax-percent').value) || 0;
+
+        const lineSubtotal = quantity * unitPrice;
+        const discountAmount = lineSubtotal * (discountPercent / 100);
+        const taxableAmount = lineSubtotal - discountAmount;
+        const taxAmount = taxableAmount * (taxPercent / 100);
+        const lineTotal = taxableAmount + taxAmount;
+
+        itemRow.querySelector('.line-total').value = lineTotal.toFixed(2);
+
+        calculateInvoiceSummary();
+    }
+
+    function calculateInvoiceSummary() {
+        const itemRows = document.querySelectorAll('#invoiceItemsContainer .item-row');
+        let subtotal = 0;
+        let totalDiscount = 0;
+        let totalTax = 0;
+
+        itemRows.forEach(row => {
+            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+            const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
+            const discountPercent = parseFloat(row.querySelector('.discount-percent').value) || 0;
+            const taxPercent = parseFloat(row.querySelector('.tax-percent').value) || 0;
+
+            const lineSubtotal = quantity * unitPrice;
+            const discountAmount = lineSubtotal * (discountPercent / 100);
+            const taxableAmount = lineSubtotal - discountAmount;
+            const taxAmount = taxableAmount * (taxPercent / 100);
+            const lineTotal = taxableAmount + taxAmount;
+
+            subtotal += lineSubtotal;
+            totalDiscount += discountAmount;
+            totalTax += taxAmount;
+        });
+
+        const shipping = parseFloat(document.querySelector('#ShippingCost').value) || 0;
+        const amountPaid = parseFloat(document.querySelector('#AmountPaid').value) || 0;
+        const grandTotal = subtotal - totalDiscount + totalTax + shipping;
+
+        document.querySelector('#Subtotal').value = subtotal.toFixed(2);
+        document.querySelector('#DiscountAmount').value = totalDiscount.toFixed(2);
+        document.querySelector('#SalesTaxAmount').value = totalTax.toFixed(2);
+        document.querySelector('#GrandTotal').value = grandTotal.toFixed(2);
+        document.querySelector('#BalanceDue').value = (grandTotal - amountPaid).toFixed(2);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateInvoiceSummary();
+    });
+
+    // Modal functions
+    function openPaymentModal() {
+        document.getElementById('paymentModal').classList.add('show');
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').classList.remove('show');
+        document.getElementById('paymentAmount').value = '';
+        document.getElementById('paymentMethod').value = '';
+        document.getElementById('paymentReference').value = '';
+    }
+
+    function openVoidModal() {
+        document.getElementById('voidModal').classList.add('show');
+    }
+
+    function closeVoidModal() {
+        document.getElementById('voidModal').classList.remove('show');
+        document.getElementById('voidReason').value = '';
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const paymentModal = document.getElementById('paymentModal');
+        const voidModal = document.getElementById('voidModal');
+        if (event.target == paymentModal) {
+            closePaymentModal();
+        }
+        if (event.target == voidModal) {
+            closeVoidModal();
+        }
+    }
+</script>

@@ -1,0 +1,61 @@
+@model List<PaintERP.Controllers.PaintProductionListItem>
+@{
+    ViewData["Title"] = "Paint Production";
+}
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Paint Production</h1>
+            <p class="page-subtitle">Manage production runs, batches, and material consumption</p>
+        </div>
+        <div class="header-right">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="icon-plus"></i>
+                New Production Run
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-body">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Production Number</th>
+                        <th>Batch Number</th>
+                        <th>Recipe</th>
+                        <th>Production Date</th>
+                        <th>Output Quantity</th>
+                        <th>Warehouse</th>
+                        <th>Finished Product</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr class="data-row">
+                            <td><strong>@item.ProductionNumber</strong></td>
+                            <td>@item.BatchNumber</td>
+                            <td>@item.Recipe</td>
+                            <td>@item.ProductionDate.ToString("MMM dd, yyyy")</td>
+                            <td>@item.OutputQuantity.ToString("F2")</td>
+                            <td>@item.WarehouseName</td>
+                            <td>@item.FinishedProduct</td>
+                            <td>
+                                <span class="status-badge status-@item.Status.ToLower().Replace(" ", "-")">@item.Status</span>
+                            </td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="link-primary">View</a>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="link-primary">Edit</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

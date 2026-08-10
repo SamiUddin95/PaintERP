@@ -1,0 +1,130 @@
+@model PaintERP.Models.ViewModels.CustomerListViewModel
+@{
+    ViewData["Title"] = "Customer Management";
+    ViewData["Action"] = "Index";
+}
+
+<section class="customer-module">
+    <div class="customer-header">
+        <div>
+            <h1>Customer Management</h1>
+            <p>Manage customer relationships, credit terms, and delivery preferences across all facilities.</p>
+        </div>
+        <a asp-action="Create" class="primary-btn">
+            <span>+</span> Add New Customer
+        </a>
+    </div>
+
+    <div class="customer-stats">
+        <div class="stat-card">
+            <span>Total Customers</span>
+            <strong>@Model.TotalCount</strong>
+            <small>@Model.ActiveCount active</small>
+        </div>
+        <div class="stat-card">
+            <span>Outstanding Balance</span>
+            <strong>@Model.TotalOutstanding.ToString("C")</strong>
+            <small>Receivables</small>
+        </div>
+        <div class="stat-card">
+            <span>Lifetime Revenue</span>
+            <strong>@Model.TotalLifetimeRevenue.ToString("C")</strong>
+            <small>All time</small>
+        </div>
+    </div>
+
+    <div class="customer-toolbar">
+        <div class="filters">
+            <input type="search" placeholder="Search customer name, ID, email..." value="@Model.SearchTerm" />
+            <select>
+                <option selected="@(Model.FilterStatus == "All")">All Status</option>
+                <option selected="@(Model.FilterStatus == "Active")">Active</option>
+                <option selected="@(Model.FilterStatus == "Inactive")">Inactive</option>
+            </select>
+            <select>
+                <option selected="@(Model.FilterType == "All")">All Types</option>
+                <option selected="@(Model.FilterType == "Residential")">Residential</option>
+                <option selected="@(Model.FilterType == "Commercial")">Commercial</option>
+                <option selected="@(Model.FilterType == "Contractor")">Contractor</option>
+                <option selected="@(Model.FilterType == "Dealer")">Dealer</option>
+                <option selected="@(Model.FilterType == "Wholesale")">Wholesale</option>
+                <option selected="@(Model.FilterType == "Retail")">Retail</option>
+            </select>
+        </div>
+        <button class="ghost">Export</button>
+    </div>
+
+    <div class="customer-table-card">
+        <table class="customer-table">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Type</th>
+                    <th>Contact</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Outstanding</th>
+                    <th>Lifetime Revenue</th>
+                    <th>Rating</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var customer in Model.Customers)
+                {
+                    var statusClass = customer.IsActive ? "status-active" : "status-inactive";
+                    var ratingStars = string.Concat(Enumerable.Repeat("★", customer.Rating)) + string.Concat(Enumerable.Repeat("☆", 5 - customer.Rating));
+                    <tr>
+                        <td>
+                            <div class="customer-cell">
+                                <span class="customer-id">@customer.CustomerId</span>
+                                <span class="customer-name">@customer.BusinessName</span>
+                                @if (customer.IsVIP)
+                                {
+                                    <span class="vip-badge">VIP</span>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <span class="customer-type">@customer.CustomerType</span>
+                            <small>@customer.Industry</small>
+                        </td>
+                        <td>
+                            <span class="contact-email">@customer.ContactEmail</span>
+                            <small>@customer.ContactPhone</small>
+                        </td>
+                        <td>
+                            <span>@customer.BillingCity</span>
+                            <small>@customer.BillingState</small>
+                        </td>
+                        <td>
+                            <span class="status-chip @statusClass">@(customer.IsActive ? "Active" : "Inactive")</span>
+                        </td>
+                        <td>
+                            <span class="amount">@customer.OutstandingBalance.ToString("C")</span>
+                        </td>
+                        <td>
+                            <span class="amount">@customer.LifetimeRevenue.ToString("C")</span>
+                        </td>
+                        <td>
+                            <span class="rating">@ratingStars</span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <a asp-action="Edit" asp-route-id="@customer.Id" class="action-btn" title="Edit">✏️</a>
+                                <a asp-action="Delete" asp-route-id="@customer.Id" class="action-btn danger" title="Delete">🗑️</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pagination" model="Model.Customers" />
+</section>
+
+@{
+    ViewData["searchTerm"] = Model.SearchTerm;
+    ViewData["filterStatus"] = Model.FilterStatus;
+    ViewData["filterType"] = Model.FilterType;
+}

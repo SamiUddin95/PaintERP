@@ -1,0 +1,234 @@
+@model PaintERP.Models.Entities.SalesInvoice
+@{
+    ViewData["Title"] = "Sales Invoice Details";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Sales Invoice Details</h1>
+            <p class="page-subtitle">@Model.InvoiceNumber - (@Model.GrandTotal.ToString("C"))</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="Index">
+                <i class="icon-arrow-left"></i>
+                Back to Invoices
+            </a>
+            <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">
+                <i class="icon-edit"></i> Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="bill-layout">
+        <div class="bill-main">
+            <!-- Invoice Header -->
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Invoice Information</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Customer</label>
+                            <input value="@Model.Customer?.BusinessName" class="form-control" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Invoice Number</label>
+                            <input value="@Model.InvoiceNumber" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Invoice Date</label>
+                            <input value="@Model.InvoiceDate.ToString("MM/dd/yyyy")" class="form-control" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Due Date</label>
+                            <input value="@Model.DueDate?.ToString("MM/dd/yyyy")" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Salesperson</label>
+                            <input value="@Model.Salesperson" class="form-control" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Warehouse</label>
+                            <input value="@Model.Warehouse?.Name" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Shipping Method</label>
+                            <input value="@Model.ShippingMethod" class="form-control" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Tracking Number</label>
+                            <input value="@Model.TrackingNumber" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Payment Terms</label>
+                            <input value="@Model.PaymentTerms" class="form-control" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Reference Number</label>
+                            <input value="@Model.ReferenceNumber" class="form-control" readonly />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items -->
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Invoice Items</div>
+                </div>
+                <div class="card-body">
+                    <div class="items-grid">
+                        <div class="items-header">
+                            <div class="col-item">SKU</div>
+                            <div class="col-desc">Description</div>
+                            <div class="col-qty">Qty</div>
+                            <div class="col-unit">Unit</div>
+                            <div class="col-price">Price</div>
+                            <div class="col-discount">Discount %</div>
+                            <div class="col-tax">Tax %</div>
+                            <div class="col-total">Line Total</div>
+                        </div>
+                        @foreach (var item in Model.SalesInvoiceItems)
+                        {
+                            <div class="item-row">
+                                <div class="col-item">@item.SKU</div>
+                                <div class="col-desc">@item.Description</div>
+                                <div class="col-qty">@item.Quantity</div>
+                                <div class="col-unit">@item.Unit</div>
+                                <div class="col-price">@item.UnitPrice.ToString("C")</div>
+                                <div class="col-discount">@item.DiscountPercent%</div>
+                                <div class="col-tax">@item.TaxPercent%</div>
+                                <div class="col-total">@item.LineTotal.ToString("C")</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Summary</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Subtotal</label>
+                            <input value="@Model.Subtotal.ToString("C")" class="form-control" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Discount</label>
+                            <input value="@Model.DiscountAmount.ToString("C")" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Shipping</label>
+                            <input value="@Model.ShippingCost.ToString("C")" class="form-control" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Sales Tax</label>
+                            <input value="@Model.SalesTaxAmount.ToString("C")" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Grand Total</label>
+                            <input value="@Model.GrandTotal.ToString("C")" class="form-control" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Amount Paid</label>
+                            <input value="@Model.AmountPaid.ToString("C")" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Balance Due</label>
+                            <input value="@Model.BalanceDue.ToString("C")" class="form-control" readonly />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            @if (!string.IsNullOrEmpty(Model.CustomerNotes) || !string.IsNullOrEmpty(Model.InternalNotes))
+            {
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">Notes</div>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(Model.CustomerNotes))
+                        {
+                            <div class="form-group">
+                                <label>Customer Notes</label>
+                                <textarea class="form-control" rows="2" readonly>@Model.CustomerNotes</textarea>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.InternalNotes))
+                        {
+                            <div class="form-group">
+                                <label>Internal Notes</label>
+                                <textarea class="form-control" rows="2" readonly>@Model.InternalNotes</textarea>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="bill-sidebar">
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Status</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Invoice Status</label>
+                        <input value="@Model.Status" class="form-control" readonly />
+                    </div>
+                    @if (Model.PaidDate.HasValue)
+                    {
+                        <div class="form-group">
+                            <label>Paid Date</label>
+                            <input value="@Model.PaidDate.Value.ToString("MM/dd/yyyy")" class="form-control" readonly />
+                        </div>
+                    }
+                    @if (Model.VoidedDate.HasValue)
+                    {
+                        <div class="form-group">
+                            <label>Voided Date</label>
+                            <input value="@Model.VoidedDate.Value.ToString("MM/dd/yyyy")" class="form-control" readonly />
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Actions</div>
+                </div>
+                <div class="card-body">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-block">
+                        <i class="icon-edit"></i> Edit Invoice
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger btn-block mt-2">
+                        <i class="icon-trash"></i> Delete Invoice
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

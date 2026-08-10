@@ -1,0 +1,72 @@
+@model PaintERP.Models.Entities.PaintFormula
+@{
+    ViewData["Title"] = "Delete Paint Formula";
+}
+
+<link rel="stylesheet" href="/css/bill.css" />
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1 class="page-title">Delete Paint Formula</h1>
+            <p class="page-subtitle">Confirm deletion of paint formula</p>
+        </div>
+        <div class="header-right">
+            <a class="btn btn-secondary" asp-action="Index">Back to List</a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <div class="card-title">Confirm Deletion</div>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <strong>Warning:</strong> Are you sure you want to delete this paint formula? This action cannot be undone.
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label>Formula Code</label>
+                    <span>@Model.FormulaCode</span>
+                </div>
+                <div class="detail-item">
+                    <label>Formula Name</label>
+                    <span>@Model.FormulaName</span>
+                </div>
+                <div class="detail-item">
+                    <label>Paint Color</label>
+                    <span>@Model.PaintColor</span>
+                </div>
+                <div class="detail-item">
+                    <label>Finish</label>
+                    <span>@Model.Finish</span>
+                </div>
+                <div class="detail-item">
+                    <label>Container Size</label>
+                    <span>@Model.ContainerSize</span>
+                </div>
+                <div class="detail-item">
+                    <label>Version</label>
+                    <span>@Model.Version</span>
+                </div>
+                <div class="detail-item">
+                    <label>Status</label>
+                    <span class="status-badge status-@Model.Status.ToLower()">@Model.Status</span>
+                </div>
+                <div class="detail-item">
+                    <label>Total Formula Cost</label>
+                    <span>@Model.TotalFormulaCost.ToString("C")</span>
+                </div>
+            </div>
+
+            <form asp-action="Delete" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-danger">Delete Formula</button>
+                    <a class="btn btn-secondary" asp-action="Index">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
