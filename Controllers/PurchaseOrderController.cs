@@ -592,6 +592,25 @@ public class PurchaseOrderController : Controller
         return RedirectToAction("Create", "GoodsReceivedNote", new { purchaseOrderId = id });
     }
 
+    // GET: PurchaseOrder/PrintPO/5
+    public async Task<IActionResult> PrintPO(int id)
+    {
+        var purchaseOrder = await _context.PurchaseOrders
+            .Include(po => po.Company)
+            .Include(po => po.Vendor)
+            .Include(po => po.Warehouse)
+            .Include(po => po.PurchaseOrderItems)
+                .ThenInclude(poi => poi.PaintItem)
+            .FirstOrDefaultAsync(po => po.Id == id);
+
+        if (purchaseOrder == null)
+        {
+            return NotFound();
+        }
+
+        return View(purchaseOrder);
+    }
+
     private async Task<string> GeneratePONumber()
     {
         var lastPO = await _context.PurchaseOrders

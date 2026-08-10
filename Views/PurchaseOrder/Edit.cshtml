@@ -278,7 +278,7 @@
                             <a asp-action="Email" asp-route-id="@Model.Id" class="btn btn-block btn-outline-secondary">
                                 <i class="icon-mail"></i> Email PO
                             </a>
-                            <a href="#" class="btn btn-block btn-outline-secondary">
+                            <a asp-action="PrintPO" asp-route-id="@Model.Id" target="_blank" class="btn btn-block btn-outline-secondary">
                                 <i class="icon-printer"></i> Print PO
                             </a>
                         </div>
