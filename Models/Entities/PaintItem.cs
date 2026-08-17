@@ -102,7 +102,11 @@ public class PaintItem
     public string CreatedBy { get; set; } = string.Empty;
     public string UpdatedBy { get; set; } = string.Empty;
 
+    // Production Source
+    public int? SourceProductionId { get; set; }
+
     // Navigation
     public Warehouse? Warehouse { get; set; }
     public Vendor? PreferredVendor { get; set; }
+    public PaintProduction? SourceProduction { get; set; }
 }

@@ -1902,6 +1902,9 @@ namespace PaintERP.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("SourceProductionId")
+                        .HasColumnType("int");
+
                     b.Property<int>("StockQuantity")
                         .HasColumnType("int");
 
@@ -1945,6 +1948,8 @@ namespace PaintERP.Migrations
                     b.HasIndex("PreferredVendorId");
 
                     b.HasIndex("SKU");
+
+                    b.HasIndex("SourceProductionId");
 
                     b.HasIndex("WarehouseId", "StockQuantity");
 
@@ -2218,6 +2223,10 @@ namespace PaintERP.Migrations
                     b.Property<decimal>("TotalCost")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("UnitCost")
                         .HasPrecision(18, 2)
@@ -2870,6 +2879,45 @@ namespace PaintERP.Migrations
                     b.HasIndex("PaintItemId", "WarehouseId", "TransactionDate");
 
                     b.ToTable("StockLedgers");
+                });
+
+            modelBuilder.Entity("PaintERP.Models.Entities.UnitConversion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("ConversionFactor")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FromUnit")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ToUnit")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UnitConversions");
                 });
 
             modelBuilder.Entity("PaintERP.Models.Entities.Vendor", b =>
@@ -3739,6 +3787,10 @@ namespace PaintERP.Migrations
                         .HasForeignKey("PreferredVendorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("PaintERP.Models.Entities.PaintProduction", "SourceProduction")
+                        .WithMany()
+                        .HasForeignKey("SourceProductionId");
+
                     b.HasOne("PaintERP.Models.Entities.Warehouse", "Warehouse")
                         .WithMany("PaintItems")
                         .HasForeignKey("WarehouseId")
@@ -3746,6 +3798,8 @@ namespace PaintERP.Migrations
                         .IsRequired();
 
                     b.Navigation("PreferredVendor");
+
+                    b.Navigation("SourceProduction");
 
                     b.Navigation("Warehouse");
                 });

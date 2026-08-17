@@ -34,21 +34,26 @@
     </div>
 
     <div class="item-toolbar">
-        <div class="filters">
-            <input type="search" placeholder="Search SKU, name, barcode..." value="@Model.SearchTerm" />
-            <select>
-                <option selected="@(Model.FilterType == "All")">All Types</option>
-                <option selected="@(Model.FilterType == "Inventory")">Inventory</option>
-                <option selected="@(Model.FilterType == "Non Inventory")">Non Inventory</option>
-                <option selected="@(Model.FilterType == "Service")">Service</option>
-                <option selected="@(Model.FilterType == "Assembly")">Assembly</option>
-                <option selected="@(Model.FilterType == "Raw Material")">Raw Material</option>
-                <option selected="@(Model.FilterType == "Finished Product")">Finished Product</option>
+        <form asp-action="Index" method="get" class="filters">
+            <input type="search" name="searchTerm" placeholder="Search SKU, name, barcode..." value="@Model.SearchTerm" />
+            <select name="filterType" onchange="this.form.submit()">
+                <option value="All" selected="@(Model.FilterType == "All")">All Types</option>
+                <option value="Inventory" selected="@(Model.FilterType == "Inventory")">Inventory</option>
+                <option value="Non Inventory" selected="@(Model.FilterType == "Non Inventory")">Non Inventory</option>
+                <option value="Service" selected="@(Model.FilterType == "Service")">Service</option>
+                <option value="Assembly" selected="@(Model.FilterType == "Assembly")">Assembly</option>
+                <option value="Raw Material" selected="@(Model.FilterType == "Raw Material")">Raw Material</option>
+                <option value="Finished Product" selected="@(Model.FilterType == "Finished Product")">Finished Product</option>
             </select>
-            <select>
-                <option selected="@(Model.FilterCategory == "All")">All Categories</option>
+            <select name="filterCategory" onchange="this.form.submit()">
+                <option value="All" selected="@(Model.FilterCategory == "All")">All Categories</option>
             </select>
-        </div>
+            <select name="filterSource" onchange="this.form.submit()">
+                <option value="All" selected="@(Model.FilterSource == "All")">All Sources</option>
+                <option value="Production" selected="@(Model.FilterSource == "Production")">From Paint Production</option>
+                <option value="NonProduction" selected="@(Model.FilterSource == "NonProduction")">Not From Production</option>
+            </select>
+        </form>
         <button class="ghost">Export</button>
     </div>
 
@@ -97,10 +102,10 @@
                             <span>@item.WarehouseName</span>
                         </td>
                         <td>
-                            <span class="stock @stockClass">@item.CurrentStock.ToString("N2")</span>
+                            <span class="stock @stockClass">@item.CurrentStock.ToString("0.##") @item.UnitOfMeasure</span>
                         </td>
                         <td>
-                            <span class="stock">@item.AvailableStock.ToString("N2")</span>
+                            <span class="stock">@item.AvailableStock.ToString("0.##") @item.UnitOfMeasure</span>
                         </td>
                         <td>
                             <span class="amount">@item.InventoryValue.ToString("C")</span>
@@ -126,4 +131,5 @@
     ViewData["searchTerm"] = Model.SearchTerm;
     ViewData["filterType"] = Model.FilterType;
     ViewData["filterCategory"] = Model.FilterCategory;
+    ViewData["filterSource"] = Model.FilterSource;
 }

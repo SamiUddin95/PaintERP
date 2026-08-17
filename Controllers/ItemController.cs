@@ -14,7 +14,7 @@ public class ItemController(PaintErpDbContext context) : Controller
     private bool IsAuthorized() => Request.Cookies.TryGetValue(AuthCookie, out var token) && token == DemoEmail;
 
     // GET: Item
-    public async Task<IActionResult> Index(string searchTerm = "", string filterType = "All", string filterCategory = "All", int? page = 1, int pageSize = 10)
+    public async Task<IActionResult> Index(string searchTerm = "", string filterType = "All", string filterCategory = "All", string filterSource = "All", int? page = 1, int pageSize = 10)
     {
         if (!IsAuthorized())
         {
@@ -47,6 +47,16 @@ public class ItemController(PaintErpDbContext context) : Controller
             query = query.Where(i => i.Category == filterCategory);
         }
 
+        // Apply source filter (from Paint Production)
+        if (filterSource == "Production")
+        {
+            query = query.Where(i => i.SourceProductionId.HasValue);
+        }
+        else if (filterSource == "NonProduction")
+        {
+            query = query.Where(i => !i.SourceProductionId.HasValue);
+        }
+
         var itemQuery = query
             .OrderBy(i => i.Name)
             .Select(i => new ItemListItem
@@ -64,7 +74,8 @@ public class ItemController(PaintErpDbContext context) : Controller
                 InventoryValue = i.InventoryValue,
                 SellingPrice = i.SellingPrice,
                 ColorHex = i.ColorHex,
-                IsHazardousMaterial = i.IsHazardousMaterial
+                IsHazardousMaterial = i.IsHazardousMaterial,
+                UnitOfMeasure = i.UnitOfMeasure
             });
 
         var items = await PaginatedList<ItemListItem>.CreateAsync(itemQuery, pageNumber, pageSize);
@@ -75,6 +86,7 @@ public class ItemController(PaintErpDbContext context) : Controller
             SearchTerm = searchTerm,
             FilterType = filterType,
             FilterCategory = filterCategory,
+            FilterSource = filterSource,
             TotalCount = context.PaintItems.Count(),
             TotalInventoryValue = context.PaintItems.Sum(i => i.InventoryValue),
             LowStockCount = context.PaintItems.Count(i => i.CurrentStock <= i.ReorderPoint)

@@ -3,17 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using PaintERP.Data;
 using PaintERP.Models.Entities;
 using PaintERP.Models.ViewModels;
+using PaintERP.Services;
 
 namespace PaintERP.Controllers;
 
-public class PaintFormulaController : Controller
+public class PaintFormulaController(PaintErpDbContext context, UnitConversionService unitConversionService) : Controller
 {
-    private readonly PaintErpDbContext _context;
-
-    public PaintFormulaController(PaintErpDbContext context)
-    {
-        _context = context;
-    }
+    private readonly PaintErpDbContext _context = context;
+    private readonly UnitConversionService _unitConversionService = unitConversionService;
 
     // GET: PaintFormula
     public async Task<IActionResult> Index()
@@ -100,6 +97,41 @@ public class PaintFormulaController : Controller
         {
             foreach (var item in viewModel.FormulaItems)
             {
+                // Get the source item to check unit conversion
+                PaintItem? sourceItem = null;
+                if (item.PaintItemId.HasValue)
+                {
+                    sourceItem = await _context.PaintItems.FindAsync(item.PaintItemId.Value);
+                }
+
+                decimal unitCostToUse = item.UnitCost;
+                string unitToUse = item.Unit;
+
+                // Convert unit cost if unit differs from item's unit
+                if (sourceItem != null && !string.IsNullOrWhiteSpace(item.Unit) &&
+                    !string.Equals(item.Unit, sourceItem.UnitOfMeasure, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (item.UnitCost <= 0)
+                    {
+                        var convertedUnitCost = await _unitConversionService.ConvertUnitCostAsync(
+                            sourceItem.UnitCost, sourceItem.UnitOfMeasure, item.Unit);
+                        if (convertedUnitCost.HasValue)
+                        {
+                            unitCostToUse = convertedUnitCost.Value;
+                        }
+                        else
+                        {
+                            unitCostToUse = sourceItem.UnitCost;
+                        }
+                    }
+                }
+                else if (sourceItem != null && string.IsNullOrWhiteSpace(item.Unit))
+                {
+                    // Default to item's unit if not specified
+                    unitToUse = sourceItem.UnitOfMeasure;
+                    unitCostToUse = sourceItem.UnitCost;
+                }
+
                 var formulaItem = new PaintFormulaItem
                 {
                     PaintFormulaId = formula.Id,
@@ -107,8 +139,8 @@ public class PaintFormulaController : Controller
                     RawMaterialName = item.RawMaterialName,
                     Percentage = item.Percentage,
                     RequiredQuantity = item.RequiredQuantity,
-                    Unit = item.Unit,
-                    UnitCost = item.UnitCost,
+                    Unit = unitToUse,
+                    UnitCost = unitCostToUse,
                     InventoryAvailable = item.InventoryAvailable
                 };
                 _context.PaintFormulaItems.Add(formulaItem);

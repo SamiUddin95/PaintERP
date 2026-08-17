@@ -18,6 +18,7 @@ public class PaintProductionController : Controller
     private readonly IAccountingService _accountingService;
     private readonly ITransactionService _transactionService;
     private readonly INotificationService _notificationService;
+    private readonly UnitConversionService _unitConversionService;
     private readonly ILogger<PaintProductionController> _logger;
 
     public PaintProductionController(
@@ -27,6 +28,7 @@ public class PaintProductionController : Controller
         IAccountingService accountingService,
         ITransactionService transactionService,
         INotificationService notificationService,
+        UnitConversionService unitConversionService,
         ILogger<PaintProductionController> logger)
     {
         _context = context;
@@ -35,6 +37,7 @@ public class PaintProductionController : Controller
         _accountingService = accountingService;
         _transactionService = transactionService;
         _notificationService = notificationService;
+        _unitConversionService = unitConversionService;
         _logger = logger;
     }
 
@@ -104,15 +107,13 @@ public class PaintProductionController : Controller
             CompanyId = defaultCompanyId, // Use default company automatically - no user selection needed
             ProductionDate = DateTime.UtcNow,
             ProductionNumber = await GenerateProductionNumber(),
+            BatchNumber = $"BATCH-{DateTime.UtcNow:yyyyMMdd-HHmmss}",
             Materials = new List<PaintProductionMaterialViewModel> { new PaintProductionMaterialViewModel() },
             Warehouses = await _context.Warehouses
                 .OrderBy(w => w.Name)
                 .Select(w => new PaintProductionWarehouseListItem { Id = w.Id, Name = w.Name })
                 .ToListAsync(),
-            PaintItems = await _context.PaintItems
-                .OrderBy(p => p.Name)
-                .Select(p => new PaintProductionPaintItemListItem { Id = p.Id, Name = p.Name, SKU = p.SKU ?? "", UnitCost = p.UnitCost })
-                .ToListAsync(),
+            PaintItems = await GetPaintItemListAsync(),
             Formulas = await _context.PaintFormulas
                 .OrderBy(f => f.FormulaName)
                 .Select(f => new PaintProductionFormulaListItem { Id = f.Id, FormulaName = f.FormulaName })
@@ -137,6 +138,194 @@ public class PaintProductionController : Controller
                 return View(model);
             }
 
+            // Step 2: Normalize material lines - drop empty rows and derive quantities/costs from the item master
+            var selectedItemIds = model.Materials
+                .Where(m => m.PaintItemId.HasValue && m.PaintItemId > 0)
+                .Select(m => m.PaintItemId!.Value)
+                .Distinct()
+                .ToList();
+
+            var itemLookup = await _context.PaintItems
+                .Where(p => selectedItemIds.Contains(p.Id))
+                .ToDictionaryAsync(p => p.Id, cancellationToken);
+
+            var materialLines = new List<PaintProductionMaterialViewModel>();
+
+            foreach (var line in model.Materials)
+            {
+                if (!line.PaintItemId.HasValue || line.PaintItemId <= 0)
+                {
+                    continue;
+                }
+
+                if (!itemLookup.TryGetValue(line.PaintItemId.Value, out var sourceItem))
+                {
+                    ModelState.AddModelError("", "One of the selected raw materials no longer exists. Please re-select it.");
+                    continue;
+                }
+
+                // A single-step production consumes exactly what it requires
+                if (line.ConsumedQuantity <= 0)
+                {
+                    line.ConsumedQuantity = line.RequiredQuantity;
+                }
+
+                if (line.RequiredQuantity <= 0)
+                {
+                    line.RequiredQuantity = line.ConsumedQuantity;
+                }
+
+                if (line.ConsumedQuantity <= 0)
+                {
+                    ModelState.AddModelError("", $"Quantity for '{sourceItem.Name}' must be greater than zero");
+                    continue;
+                }
+
+                // Convert consumed quantity to the item's unit if different
+                decimal consumedQuantityInItemUnit = line.ConsumedQuantity;
+                decimal unitCostInUserUnit = line.UnitCost;
+
+                if (!string.IsNullOrWhiteSpace(line.Unit) && !string.Equals(line.Unit, sourceItem.UnitOfMeasure, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Convert quantity to item's unit for stock deduction
+                    var convertedQuantity = await _unitConversionService.ConvertQuantityAsync(
+                        line.ConsumedQuantity, line.Unit, sourceItem.UnitOfMeasure, cancellationToken);
+                    if (convertedQuantity.HasValue)
+                    {
+                        consumedQuantityInItemUnit = convertedQuantity.Value;
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("", $"Cannot convert {line.Unit} to {sourceItem.UnitOfMeasure} for '{sourceItem.Name}'. Please add the conversion or use the same unit.");
+                        continue;
+                    }
+
+                    // Convert unit cost from item's unit to user's unit for cost calculation
+                    if (line.UnitCost <= 0)
+                    {
+                        var convertedUnitCost = await _unitConversionService.ConvertUnitCostAsync(
+                            sourceItem.UnitCost, sourceItem.UnitOfMeasure, line.Unit, cancellationToken);
+                        if (convertedUnitCost.HasValue)
+                        {
+                            unitCostInUserUnit = convertedUnitCost.Value;
+                        }
+                        else
+                        {
+                            // Fallback to item's unit cost if conversion fails
+                            unitCostInUserUnit = sourceItem.UnitCost;
+                        }
+                    }
+                }
+                else if (string.IsNullOrWhiteSpace(line.Unit))
+                {
+                    // Default to item's unit if not specified
+                    line.Unit = sourceItem.UnitOfMeasure;
+                    unitCostInUserUnit = sourceItem.UnitCost;
+                }
+
+                if (line.UnitCost <= 0)
+                {
+                    line.UnitCost = unitCostInUserUnit;
+                }
+
+                line.MaterialName = string.IsNullOrWhiteSpace(line.MaterialName) ? sourceItem.Name : line.MaterialName;
+                line.TotalCost = decimal.Round(line.ConsumedQuantity * line.UnitCost, 2);
+                line.StockBefore = sourceItem.CurrentStock;
+                line.StockAfter = sourceItem.CurrentStock - consumedQuantityInItemUnit;
+
+                if (sourceItem.WarehouseId != model.WarehouseId)
+                {
+                    ModelState.AddModelError("", $"'{sourceItem.Name}' is stocked in warehouse '{sourceItem.WarehouseName}'. Select that warehouse or transfer the stock first.");
+                }
+                else if (sourceItem.CurrentStock < consumedQuantityInItemUnit)
+                {
+                    ModelState.AddModelError("", $"Insufficient stock for '{sourceItem.Name}'. Available: {sourceItem.CurrentStock:0.##} {sourceItem.UnitOfMeasure}, required: {consumedQuantityInItemUnit:0.##} {sourceItem.UnitOfMeasure} (entered: {line.ConsumedQuantity:0.##} {line.Unit})");
+                }
+
+                materialLines.Add(line);
+            }
+
+            if (materialLines.Count == 0)
+            {
+                ModelState.AddModelError("", "Add at least one raw material with a quantity greater than zero");
+            }
+
+            if (model.OutputQuantity <= 0)
+            {
+                ModelState.AddModelError(nameof(model.OutputQuantity), "Output quantity must be greater than zero");
+            }
+
+            // Step 3: Resolve the finished product target - an existing item or a brand new one
+            PaintItem? existingFinishedItem = null;
+
+            if (model.CreateNewItem)
+            {
+                if (string.IsNullOrWhiteSpace(model.NewItemDetails.Name))
+                {
+                    ModelState.AddModelError("NewItemDetails.Name", "Item name is required when creating a new item");
+                }
+                else if (await _context.PaintItems.AnyAsync(p => p.Name == model.NewItemDetails.Name && p.WarehouseId == model.WarehouseId, cancellationToken))
+                {
+                    ModelState.AddModelError("NewItemDetails.Name", $"An item named '{model.NewItemDetails.Name}' already exists in this warehouse");
+                }
+
+                if (!string.IsNullOrWhiteSpace(model.NewItemDetails.SKU) &&
+                    await _context.PaintItems.AnyAsync(p => p.SKU == model.NewItemDetails.SKU, cancellationToken))
+                {
+                    ModelState.AddModelError("NewItemDetails.SKU", $"SKU '{model.NewItemDetails.SKU}' is already in use");
+                }
+            }
+            else if (!model.FinishedProductId.HasValue || model.FinishedProductId <= 0)
+            {
+                ModelState.AddModelError(nameof(model.FinishedProductId), "Select a finished product or tick 'Create New Item from Production'");
+            }
+            else
+            {
+                existingFinishedItem = await _context.PaintItems
+                    .FirstOrDefaultAsync(p => p.Id == model.FinishedProductId.Value, cancellationToken);
+
+                if (existingFinishedItem == null)
+                {
+                    ModelState.AddModelError(nameof(model.FinishedProductId), "Selected finished product no longer exists");
+                }
+                else if (existingFinishedItem.WarehouseId != model.WarehouseId)
+                {
+                    ModelState.AddModelError(nameof(model.FinishedProductId), $"'{existingFinishedItem.Name}' belongs to warehouse '{existingFinishedItem.WarehouseName}'. Select that warehouse instead.");
+                }
+            }
+
+            var targetWarehouse = await _context.Warehouses
+                .FirstOrDefaultAsync(w => w.Id == model.WarehouseId, cancellationToken);
+
+            if (targetWarehouse == null)
+            {
+                ModelState.AddModelError(nameof(model.WarehouseId), "Select a valid warehouse");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                this.AddErrorMessage("Please correct the validation errors");
+                if (model.Materials.Count == 0)
+                {
+                    model.Materials.Add(new PaintProductionMaterialViewModel());
+                }
+                await PopulateDropdowns(model);
+                return View(model);
+            }
+
+            // Step 4: Recalculate costs on the server so the ledger cannot be tampered with from the browser
+            model.MaterialCost = decimal.Round(materialLines.Sum(m => m.TotalCost), 2);
+            model.ProductionCost = decimal.Round(model.MaterialCost + model.LaborCost + model.OverheadCost, 2);
+            model.FinishedProductCost = model.ProductionCost;
+            model.CostPerUnit = decimal.Round(model.ProductionCost / model.OutputQuantity, 4);
+
+            if (string.IsNullOrWhiteSpace(model.FinishedProductDescription))
+            {
+                model.FinishedProductDescription = model.CreateNewItem
+                    ? model.NewItemDetails.Name
+                    : existingFinishedItem?.Name ?? model.Recipe;
+            }
+
             // Ensure default company exists
             if (!await _context.Companies.AnyAsync(cancellationToken))
             {
@@ -153,6 +342,9 @@ public class PaintProductionController : Controller
 
             var defaultCompanyId = await _context.Companies.Select(c => c.Id).FirstOrDefaultAsync(cancellationToken);
 
+            var currentUser = User.Identity?.Name ?? "System";
+
+            // Build the production object first
             var production = new PaintProduction
             {
                 CompanyId = defaultCompanyId, // Use default company automatically - no user selection needed
@@ -163,7 +355,7 @@ public class PaintProductionController : Controller
                 WarehouseId = model.WarehouseId,
                 OutputQuantity = model.OutputQuantity,
                 Status = model.Status,
-                FinishedProductId = model.FinishedProductId,
+                FinishedProductId = model.CreateNewItem ? null : model.FinishedProductId,
                 FormulaId = model.FormulaId,
                 FinishedProductDescription = model.FinishedProductDescription,
                 MaterialCost = model.MaterialCost,
@@ -179,12 +371,51 @@ public class PaintProductionController : Controller
                 ProductionNotes = model.ProductionNotes,
                 CreatedAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow,
-                CreatedBy = User.Identity?.Name ?? "System",
-                UpdatedBy = User.Identity?.Name ?? "System"
+                CreatedBy = currentUser,
+                UpdatedBy = currentUser
             };
 
-            // Add production materials
-            foreach (var material in model.Materials)
+            // Build (but do not persist yet) the new finished-goods item so it is created inside the transaction
+            PaintItem? newItem = null;
+
+            if (model.CreateNewItem)
+            {
+                // Cost of the new item is the production cost spread over the produced quantity
+                var calculatedUnitCost = decimal.Round(model.ProductionCost / model.OutputQuantity, 4);
+                model.NewItemDetails.CalculatedUnitCost = calculatedUnitCost;
+
+                newItem = new PaintItem
+                {
+                    WarehouseId = model.WarehouseId,
+                    SKU = string.IsNullOrWhiteSpace(model.NewItemDetails.SKU) ? GenerateSKU() : model.NewItemDetails.SKU,
+                    Name = model.NewItemDetails.Name,
+                    ItemType = "Finished Product",
+                    Category = string.IsNullOrWhiteSpace(model.NewItemDetails.Category) ? "Finished Product" : model.NewItemDetails.Category,
+                    WarehouseName = targetWarehouse!.Name,
+                    UnitOfMeasure = model.NewItemDetails.UnitOfMeasure,
+                    SourceProductionId = production.Id, // Track that this item was created from this production
+                    PurchaseUnit = model.NewItemDetails.UnitOfMeasure,
+                    SalesUnit = model.NewItemDetails.UnitOfMeasure,
+                    CostMethod = "Average Cost",
+                    PurchasePrice = calculatedUnitCost,
+                    SellingPrice = model.NewItemDetails.SellingPrice,
+                    UnitCost = calculatedUnitCost,
+                    StockQuantity = 0,
+                    CurrentStock = 0,
+                    AvailableStock = 0,
+                    ReservedStock = 0,
+                    InventoryValue = 0,
+                    ReorderLevel = 0,
+                    Notes = model.NewItemDetails.Description,
+                    CreatedAtUtc = DateTime.UtcNow,
+                    UpdatedAtUtc = DateTime.UtcNow,
+                    CreatedBy = currentUser,
+                    UpdatedBy = currentUser
+                };
+            }
+
+            // Add production materials from the normalized lines
+            foreach (var material in materialLines)
             {
                 production.Materials.Add(new PaintProductionMaterial
                 {
@@ -201,7 +432,7 @@ public class PaintProductionController : Controller
                 });
             }
 
-            // Step 2: Business Validation
+            // Step 5: Business Validation
             var validationResult = await _validationService.ValidateProductionAsync(production, cancellationToken);
             
             if (!validationResult.IsValid)
@@ -222,34 +453,104 @@ public class PaintProductionController : Controller
             {
                 try
                 {
-                    // Save production
+                    // Save production first to get its Id for foreign key references
                     _context.PaintProductions.Add(production);
                     await _context.SaveChangesAsync(cancellationToken);
 
-                    // Process inventory - consume raw materials
-                    if (production.Materials != null && production.Materials.Any())
+                    _logger.LogInformation(
+                        "Saved production {ProductionNumber} with Id {ProductionId}",
+                        production.ProductionNumber, production.Id
+                    );
+
+                    // Now create the new finished-goods item with the correct SourceProductionId
+                    if (newItem != null)
                     {
-                        foreach (var material in production.Materials)
+                        newItem.SourceProductionId = production.Id; // Set after production has an Id
+                        _context.PaintItems.Add(newItem);
+                        await _context.SaveChangesAsync(cancellationToken);
+
+                        production.FinishedProductId = newItem.Id;
+
+                        _logger.LogInformation(
+                            "Created item {ItemName} (Id {ItemId}, SKU {Sku}) from production {ProductionNumber}",
+                            newItem.Name, newItem.Id, newItem.SKU, production.ProductionNumber
+                        );
+                    }
+
+                    // Consume raw materials - each toner is deducted from its inventory
+                    foreach (var material in production.Materials)
+                    {
+                        if (!material.PaintItemId.HasValue || material.ConsumedQuantity <= 0)
                         {
-                            if (material.PaintItemId.HasValue && material.ConsumedQuantity > 0)
+                            continue;
+                        }
+
+                        // Get the source item to check its unit and convert if needed
+                        var sourceItem = await _context.PaintItems
+                            .FirstOrDefaultAsync(p => p.Id == material.PaintItemId.Value, cancellationToken);
+
+                        if (sourceItem == null)
+                        {
+                            return TransactionResult.FailureResult(
+                                $"Raw material '{material.MaterialName}' no longer exists",
+                                "Item not found"
+                            );
+                        }
+
+                        // Convert consumed quantity to item's unit if different
+                        decimal quantityToDeduct = material.ConsumedQuantity;
+                        if (!string.IsNullOrWhiteSpace(material.Unit) && !string.Equals(material.Unit, sourceItem.UnitOfMeasure, StringComparison.OrdinalIgnoreCase))
+                        {
+                            var convertedQuantity = await _unitConversionService.ConvertQuantityAsync(
+                                material.ConsumedQuantity, material.Unit, sourceItem.UnitOfMeasure, cancellationToken);
+                            if (convertedQuantity.HasValue)
                             {
-                                await _inventoryService.ReduceStockAsync(
-                                    material.PaintItemId.Value,
-                                    production.WarehouseId,
-                                    material.ConsumedQuantity,
-                                    "Paint Production",
-                                    production.Id,
-                                    $"Production: {production.ProductionNumber}",
-                                    cancellationToken
+                                quantityToDeduct = convertedQuantity.Value;
+                                _logger.LogInformation(
+                                    "Converted quantity for {Material}: {OriginalQty} {FromUnit} -> {ConvertedQty} {ToUnit}",
+                                    sourceItem.Name, material.ConsumedQuantity, material.Unit, quantityToDeduct, sourceItem.UnitOfMeasure
+                                );
+                            }
+                            else
+                            {
+                                return TransactionResult.FailureResult(
+                                    $"Cannot convert {material.Unit} to {sourceItem.UnitOfMeasure} for '{sourceItem.Name}'",
+                                    "Conversion not found"
                                 );
                             }
                         }
+
+                        _logger.LogInformation(
+                            "Reducing stock for {Material}: ItemId={ItemId}, WarehouseId={WarehouseId}, QtyToDeduct={Qty}, ItemUnit={ItemUnit}, CurrentStock={Stock}",
+                            sourceItem.Name, material.PaintItemId.Value, production.WarehouseId, quantityToDeduct, sourceItem.UnitOfMeasure, sourceItem.CurrentStock
+                        );
+
+                        var reduceResult = await _inventoryService.ReduceStockAsync(
+                            material.PaintItemId.Value,
+                            production.WarehouseId,
+                            quantityToDeduct,
+                            "Paint Production",
+                            production.Id,
+                            $"Production: {production.ProductionNumber}",
+                            cancellationToken
+                        );
+
+                        if (!reduceResult.Success)
+                        {
+                            return TransactionResult.FailureResult(
+                                $"Could not consume '{material.MaterialName}'",
+                                reduceResult.Message
+                            );
+                        }
+
+                        material.StockBefore = reduceResult.StockBefore;
+                        material.StockAfter = reduceResult.StockAfter;
                     }
 
-                    // Add finished product to inventory
+                    // Add the produced quantity of the finished product to inventory
                     if (production.FinishedProductId.HasValue && production.OutputQuantity > 0)
                     {
-                        await _inventoryService.IncreaseStockAsync(
+                        var increaseResult = await _inventoryService.IncreaseStockAsync(
                             production.FinishedProductId.Value,
                             production.WarehouseId,
                             production.OutputQuantity,
@@ -258,15 +559,29 @@ public class PaintProductionController : Controller
                             $"Production: {production.ProductionNumber}",
                             cancellationToken
                         );
+
+                        if (!increaseResult.Success)
+                        {
+                            return TransactionResult.FailureResult(
+                                "Could not add the finished product to inventory",
+                                increaseResult.Message
+                            );
+                        }
                     }
+
+                    await _context.SaveChangesAsync(cancellationToken);
 
                     _logger.LogInformation(
                         "Paint Production {ProductionNumber} created successfully",
                         production.ProductionNumber
                     );
 
+                    var successMessage = newItem != null
+                        ? $"Production {production.ProductionNumber} completed. Item '{newItem.Name}' ({newItem.SKU}) created and {production.OutputQuantity:0.##} added to inventory."
+                        : $"Production {production.ProductionNumber} completed and inventory updated.";
+
                     return TransactionResult.SuccessResult(
-                        $"Paint Production {production.ProductionNumber} created successfully",
+                        successMessage,
                         new { ProductionId = production.Id }
                     );
                 }
@@ -287,6 +602,15 @@ public class PaintProductionController : Controller
             }
             else
             {
+                _logger.LogError("Transaction failed. Message: {Message}, Errors: {Errors}",
+                    transactionResult.Message,
+                    string.Join(", ", transactionResult.Errors));
+
+                if (!string.IsNullOrWhiteSpace(transactionResult.Message))
+                {
+                    this.AddErrorMessage(transactionResult.Message);
+                }
+
                 foreach (var error in transactionResult.Errors)
                 {
                     this.AddErrorMessage(error);
@@ -301,6 +625,100 @@ public class PaintProductionController : Controller
             await PopulateDropdowns(model);
             return this.WithError("An unexpected error occurred. Please try again.", "Index");
         }
+    }
+
+    // POST: PaintProduction/Complete/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Complete(int id)
+    {
+        var production = await _context.PaintProductions.FindAsync(id);
+        if (production == null)
+        {
+            return NotFound();
+        }
+
+        if (production.Status == "Completed")
+        {
+            this.AddWarningMessage("Production is already completed.");
+            return RedirectToAction("Edit", new { id = id });
+        }
+
+        production.Status = "Completed";
+        production.CompletedAtUtc = DateTime.UtcNow;
+        production.UpdatedAtUtc = DateTime.UtcNow;
+        production.UpdatedBy = User.Identity?.Name ?? "System";
+
+        await _context.SaveChangesAsync();
+
+        this.AddSuccessMessage($"Production {production.ProductionNumber} has been completed.");
+        return RedirectToAction("Edit", new { id = id });
+    }
+
+    // POST: PaintProduction/OnHold/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> OnHold(int id)
+    {
+        var production = await _context.PaintProductions.FindAsync(id);
+        if (production == null)
+        {
+            return NotFound();
+        }
+
+        if (production.Status == "On Hold")
+        {
+            this.AddWarningMessage("Production is already on hold.");
+            return RedirectToAction("Index");
+        }
+
+        if (production.Status == "Completed" || production.Status == "Cancelled")
+        {
+            this.AddErrorMessage("Cannot put a completed or cancelled production on hold.");
+            return RedirectToAction("Index");
+        }
+
+        production.Status = "On Hold";
+        production.UpdatedAtUtc = DateTime.UtcNow;
+        production.UpdatedBy = User.Identity?.Name ?? "System";
+
+        await _context.SaveChangesAsync();
+
+        this.AddSuccessMessage($"Production {production.ProductionNumber} has been put on hold.");
+        return RedirectToAction("Index");
+    }
+
+    // POST: PaintProduction/Cancel/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        var production = await _context.PaintProductions.FindAsync(id);
+        if (production == null)
+        {
+            return NotFound();
+        }
+
+        if (production.Status == "Cancelled")
+        {
+            this.AddWarningMessage("Production is already cancelled.");
+            return RedirectToAction("Index");
+        }
+
+        if (production.Status == "Completed")
+        {
+            this.AddErrorMessage("Cannot cancel a completed production.");
+            return RedirectToAction("Index");
+        }
+
+        production.Status = "Cancelled";
+        production.UpdatedAtUtc = DateTime.UtcNow;
+        production.UpdatedBy = User.Identity?.Name ?? "System";
+
+        await _context.SaveChangesAsync();
+
+        this.AddSuccessMessage($"Production {production.ProductionNumber} has been cancelled.");
+        return RedirectToAction("Index");
     }
 
     // GET: PaintProduction/Edit/5
@@ -369,10 +787,7 @@ public class PaintProductionController : Controller
             .Select(w => new PaintProductionWarehouseListItem { Id = w.Id, Name = w.Name })
             .ToListAsync();
 
-        model.PaintItems = await _context.PaintItems
-            .OrderBy(p => p.Name)
-            .Select(p => new PaintProductionPaintItemListItem { Id = p.Id, Name = p.Name, SKU = p.SKU ?? "", UnitCost = p.UnitCost })
-            .ToListAsync();
+        model.PaintItems = await GetPaintItemListAsync();
 
         model.Formulas = await _context.PaintFormulas
             .OrderBy(f => f.FormulaName)
@@ -558,22 +973,22 @@ public class PaintProductionController : Controller
         return RedirectToAction(nameof(Edit), new { id });
     }
 
-    // POST: PaintProduction/Complete/5
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Complete(int id)
+    private async Task<List<PaintProductionPaintItemListItem>> GetPaintItemListAsync()
     {
-        var production = await _context.PaintProductions.FindAsync(id);
-        if (production != null)
-        {
-            production.Status = "Completed";
-            production.CompletedAtUtc = DateTime.UtcNow;
-            production.UpdatedAtUtc = DateTime.UtcNow;
-            production.UpdatedBy = User.Identity?.Name ?? "System";
-            await _context.SaveChangesAsync();
-        }
-
-        return RedirectToAction(nameof(Edit), new { id });
+        return await _context.PaintItems
+            .AsNoTracking()
+            .OrderBy(p => p.Name)
+            .Select(p => new PaintProductionPaintItemListItem
+            {
+                Id = p.Id,
+                Name = p.Name,
+                SKU = p.SKU ?? "",
+                UnitCost = p.UnitCost,
+                WarehouseId = p.WarehouseId,
+                CurrentStock = p.CurrentStock,
+                UnitOfMeasure = p.UnitOfMeasure ?? ""
+            })
+            .ToListAsync();
     }
 
     private async Task<string> GenerateProductionNumber()
@@ -594,6 +1009,14 @@ public class PaintProductionController : Controller
         }
 
         return "PR-0001";
+    }
+
+    private string GenerateSKU()
+    {
+        var prefix = "SKU";
+        var year = DateTime.UtcNow.Year.ToString().Substring(2);
+        var count = _context.PaintItems.Count() + 1;
+        return $"{prefix}{year}-{count:D4}";
     }
 }
 

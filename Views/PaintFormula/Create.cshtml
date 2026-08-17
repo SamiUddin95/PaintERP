@@ -168,7 +168,7 @@
 
         let paintItemOptions = '<option value="">Select Material</option>';
         paintItems.forEach(item => {
-            paintItemOptions += `<option value="${item.id}" data-name="${item.name}" data-cost="${item.unitCost}" data-inventory="${item.stockQuantity}" data-unit="${item.unitOfMeasure}">${item.name} (${item.sku})</option>`;
+            paintItemOptions += `<option value="${item.Id}" data-name="${item.Name}" data-cost="${item.UnitCost}" data-inventory="${item.StockQuantity}" data-unit="${item.UnitOfMeasure}">${item.Name} (${item.SKU})</option>`;
         });
 
         itemRow.innerHTML = `
@@ -187,7 +187,19 @@
                 <input type="number" name="FormulaItems[${formulaItemIndex}].RequiredQuantity" step="0.01" class="form-control form-control-sm" value="0" onchange="calculateFormulaSummary()" />
             </div>
             <div class="col-unit">
-                <input type="text" name="FormulaItems[${formulaItemIndex}].Unit" class="form-control form-control-sm unit-input" value="Each" />
+                <select name="FormulaItems[${formulaItemIndex}].Unit" class="form-control form-control-sm unit-input" onchange="onFormulaUnitChanged(this)">
+                    <option value="">Select Unit</option>
+                    <option value="L">L (Liter)</option>
+                    <option value="mL">mL (Milliliter)</option>
+                    <option value="GAL">GAL (Gallon)</option>
+                    <option value="QT">QT (Quart)</option>
+                    <option value="PT">PT (Pint)</option>
+                    <option value="KG">KG (Kilogram)</option>
+                    <option value="G">G (Gram)</option>
+                    <option value="LB">LB (Pound)</option>
+                    <option value="OZ">OZ (Ounce)</option>
+                    <option value="Each">Each</option>
+                </select>
             </div>
             <div class="col-cost">
                 <input type="number" name="FormulaItems[${formulaItemIndex}].UnitCost" step="0.01" class="form-control form-control-sm" value="0" onchange="calculateFormulaSummary()" />
@@ -224,13 +236,48 @@
             materialNameInput.value = selectedOption.dataset.name || '';
             unitCostInput.value = selectedOption.dataset.cost || 0;
             inventoryInput.value = selectedOption.dataset.inventory || 0;
-            unitInput.value = selectedOption.dataset.unit || 'Each';
+            unitInput.value = selectedOption.dataset.unit || '';
         } else {
             materialNameInput.value = '';
             unitCostInput.value = 0;
             inventoryInput.value = 0;
-            unitInput.value = 'Each';
+            unitInput.value = '';
         }
+        calculateFormulaSummary();
+    }
+
+    function onFormulaUnitChanged(select) {
+        const itemRow = select.closest('.item-row');
+        const materialSelect = itemRow.querySelector('.material-select');
+        const selectedOption = materialSelect ? materialSelect.options[materialSelect.selectedIndex] : null;
+        const originalUnit = selectedOption ? selectedOption.dataset.unit : '';
+        const newUnit = select.value;
+
+        if (originalUnit && newUnit && originalUnit !== newUnit) {
+            // Show warning that unit cost will be adjusted
+            const unitCostInput = itemRow.querySelector('input[name$=".UnitCost"]');
+            const originalCost = parseFloat(unitCostInput.value) || 0;
+
+            if (originalCost > 0) {
+                // Show warning message
+                const warningDiv = itemRow.querySelector('.unit-warning') || document.createElement('small');
+                warningDiv.className = 'unit-warning text-warning';
+                warningDiv.style.display = 'block';
+                warningDiv.style.marginTop = '4px';
+                warningDiv.textContent = `⚠️ Unit changed from ${originalUnit} to ${newUnit}. Cost will be adjusted automatically.`;
+
+                if (!itemRow.querySelector('.unit-warning')) {
+                    select.parentNode.appendChild(warningDiv);
+                }
+            }
+        } else {
+            // Remove warning if unit matches original
+            const warningDiv = itemRow.querySelector('.unit-warning');
+            if (warningDiv) {
+                warningDiv.remove();
+            }
+        }
+
         calculateFormulaSummary();
     }
 

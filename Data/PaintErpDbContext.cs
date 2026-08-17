@@ -37,10 +37,15 @@ public class PaintErpDbContext(DbContextOptions<PaintErpDbContext> options) : Db
     public DbSet<AppSettings> AppSettings => Set<AppSettings>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<JournalEntryLine> JournalEntryLines => Set<JournalEntryLine>();
+    public DbSet<UnitConversion> UnitConversions => Set<UnitConversion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<UnitConversion>()
+            .Property(uc => uc.ConversionFactor)
+            .HasPrecision(18, 6);
 
         modelBuilder.Entity<Customer>()
             .Property(c => c.LifetimeRevenue)

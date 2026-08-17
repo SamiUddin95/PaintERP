@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<UnitConversionService>();
 
         // HTTP Context Accessor for notifications
         services.AddHttpContextAccessor();

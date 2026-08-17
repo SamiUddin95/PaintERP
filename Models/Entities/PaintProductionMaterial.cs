@@ -9,6 +9,7 @@ public class PaintProductionMaterial
     public string MaterialType { get; set; } = string.Empty;
     public decimal RequiredQuantity { get; set; }
     public decimal ConsumedQuantity { get; set; }
+    public string Unit { get; set; } = string.Empty;
     public decimal UnitCost { get; set; }
     public decimal TotalCost { get; set; }
     public decimal? PercentageInMix { get; set; }

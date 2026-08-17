@@ -80,6 +80,13 @@ app.UseRouting();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+// Seed default unit conversions
+using (var scope = app.Services.CreateScope())
+{
+    var unitConversionService = scope.ServiceProvider.GetRequiredService<UnitConversionService>();
+    await unitConversionService.SeedDefaultConversionsAsync();
+}
+
 app.UseAuthentication();
 
 app.UseAuthorization();

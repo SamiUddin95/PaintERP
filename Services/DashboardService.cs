@@ -31,7 +31,7 @@ public class DashboardService(PaintErpDbContext context) : IDashboardService
             .SumAsync(p => p.OutputQuantity, cancellationToken);
         var openPurchaseOrders = await context.PurchaseOrders.CountAsync(p => p.Status == "Open" || p.Status == "Pending", cancellationToken);
         var openInvoices = await context.SalesInvoices.CountAsync(i => i.Status == "Overdue", cancellationToken);
-        var lowStockAlerts = await context.PaintItems.CountAsync(cancellationToken);
+        var lowStockAlerts = await context.PaintItems.CountAsync(p => p.CurrentStock <= p.MinimumStock, cancellationToken);
 
         var kpis = new List<KpiCard>
         {

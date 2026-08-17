@@ -404,7 +404,7 @@ public class ValidationService : IValidationService
         
         if (paintItem == null) return false;
         
-        return paintItem.StockQuantity >= quantity;
+        return paintItem.CurrentStock >= quantity;
     }
 
     public async Task<bool> IsFormulaValidAsync(int formulaId, CancellationToken cancellationToken = default)

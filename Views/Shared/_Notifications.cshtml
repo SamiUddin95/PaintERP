@@ -5,6 +5,52 @@
     var messages = NotificationService.GetMessages();
     NotificationService.ClearMessages();
 
+    // Check TempData for messages (used by ControllerExtensions)
+    var errorMessage = TempData["ErrorMessage"] as string;
+    var successMessage = TempData["SuccessMessage"] as string;
+    var warningMessage = TempData["WarningMessage"] as string;
+    var infoMessage = TempData["InfoMessage"] as string;
+
+    if (!string.IsNullOrEmpty(errorMessage))
+    {
+        messages.Add(new NotificationMessage
+        {
+            Message = errorMessage,
+            Type = NotificationType.Error,
+            Timestamp = DateTime.UtcNow
+        });
+    }
+
+    if (!string.IsNullOrEmpty(successMessage))
+    {
+        messages.Add(new NotificationMessage
+        {
+            Message = successMessage,
+            Type = NotificationType.Success,
+            Timestamp = DateTime.UtcNow
+        });
+    }
+
+    if (!string.IsNullOrEmpty(warningMessage))
+    {
+        messages.Add(new NotificationMessage
+        {
+            Message = warningMessage,
+            Type = NotificationType.Warning,
+            Timestamp = DateTime.UtcNow
+        });
+    }
+
+    if (!string.IsNullOrEmpty(infoMessage))
+    {
+        messages.Add(new NotificationMessage
+        {
+            Message = infoMessage,
+            Type = NotificationType.Info,
+            Timestamp = DateTime.UtcNow
+        });
+    }
+
     // Also check ViewData for validation errors
     var validationErrors = ViewData["ValidationErrors"] as List<string>;
     var validationWarnings = ViewData["ValidationWarnings"] as List<string>;

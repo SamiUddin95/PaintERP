@@ -4,6 +4,10 @@
     var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
     var nextDisabled = !Model.HasNextPage ? "disabled" : "";
     var action = ViewData["Action"]?.ToString() ?? "Index";
+    var searchTerm = ViewData["searchTerm"]?.ToString() ?? "";
+    var filterType = ViewData["filterType"]?.ToString() ?? "All";
+    var filterCategory = ViewData["filterCategory"]?.ToString() ?? "All";
+    var filterSource = ViewData["filterSource"]?.ToString() ?? "All";
 }
 
 <div class="pagination-container">
@@ -15,6 +19,7 @@
             <ul class="pagination">
                 <li class="page-item @prevDisabled">
                     <a asp-action="@action" asp-route-page="@(Model.PageIndex - 1)"
+                       asp-route-searchTerm="@searchTerm" asp-route-filterType="@filterType" asp-route-filterCategory="@filterCategory" asp-route-filterSource="@filterSource"
                        class="page-link" aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
                         <span class="sr-only">Previous</span>
@@ -27,6 +32,7 @@
                     {
                         <li class="page-item @(i == Model.PageIndex ? "active" : "")">
                             <a asp-action="@action" asp-route-page="@i"
+                               asp-route-searchTerm="@searchTerm" asp-route-filterType="@filterType" asp-route-filterCategory="@filterCategory" asp-route-filterSource="@filterSource"
                                class="page-link">@i</a>
                         </li>
                     }
@@ -38,6 +44,7 @@
 
                 <li class="page-item @nextDisabled">
                     <a asp-action="@action" asp-route-page="@(Model.PageIndex + 1)"
+                       asp-route-searchTerm="@searchTerm" asp-route-filterType="@filterType" asp-route-filterCategory="@filterCategory" asp-route-filterSource="@filterSource"
                        class="page-link" aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
                         <span class="sr-only">Next</span>

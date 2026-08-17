@@ -1,6 +1,35 @@
 @model PaintERP.Models.ViewModels.PaintProductionFormViewModel
 @{
     ViewData["Title"] = "New Paint Production";
+
+    // Raw material options are rendered once on the server and cloned by the browser for new rows
+    var optionsBuilder = new System.Text.StringBuilder();
+    optionsBuilder.Append("<option value=\"\">Select Material</option>");
+    foreach (var paintItem in Model.PaintItems)
+    {
+        optionsBuilder.Append("<option value=\"")
+            .Append(paintItem.Id)
+            .Append("\" data-cost=\"")
+            .Append(paintItem.UnitCost.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture))
+            .Append("\" data-stock=\"")
+            .Append(paintItem.CurrentStock.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture))
+            .Append("\" data-warehouse=\"")
+            .Append(paintItem.WarehouseId)
+            .Append("\" data-uom=\"")
+            .Append(System.Net.WebUtility.HtmlEncode(paintItem.UnitOfMeasure))
+            .Append("\" data-name=\"")
+            .Append(System.Net.WebUtility.HtmlEncode(paintItem.Name))
+            .Append("\">")
+            .Append(System.Net.WebUtility.HtmlEncode(paintItem.Name))
+            .Append(" (")
+            .Append(System.Net.WebUtility.HtmlEncode(paintItem.SKU))
+            .Append(") - ")
+            .Append(paintItem.CurrentStock.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))
+            .Append(' ')
+            .Append(System.Net.WebUtility.HtmlEncode(paintItem.UnitOfMeasure))
+            .Append(" in stock</option>");
+    }
+    var materialOptionsHtml = optionsBuilder.ToString();
 }
 
 <div class="page-container">
@@ -72,7 +101,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label asp-for="FinishedProductId">Finished Product</label>
-                                <select asp-for="FinishedProductId" class="form-control">
+                                <select asp-for="FinishedProductId" class="form-control" id="finishedProductSelect" onchange="toggleNewItemForm()">
                                     <option value="">Select Finished Product</option>
                                     @foreach (var item in Model.PaintItems)
                                     {
@@ -93,18 +122,71 @@
                         </div>
                         <div class="form-row">
                             <div class="form-group">
+                                <div class="checkbox-wrapper">
+                                    <input asp-for="CreateNewItem" class="form-check-input" id="createNewItemCheckbox" onchange="toggleNewItemForm()" />
+                                    <label asp-for="CreateNewItem" class="form-check-label">Create New Item from Production</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- New Item Details Form (Hidden by default) -->
+                        <div id="newItemForm" class="content-card" style="display: none;">
+                            <div class="card-header">
+                                <div class="card-title">New Item Details</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="required" asp-for="NewItemDetails.Name">Item Name</label>
+                                        <input asp-for="NewItemDetails.Name" class="form-control" placeholder="Enter new item name">
+                                        <span asp-validation-for="NewItemDetails.Name" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="NewItemDetails.SKU">SKU</label>
+                                        <input asp-for="NewItemDetails.SKU" class="form-control" placeholder="Auto-generated if empty">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label asp-for="NewItemDetails.Category">Category</label>
+                                        <input asp-for="NewItemDetails.Category" class="form-control" placeholder="Finished Product">
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="NewItemDetails.UnitOfMeasure">Unit of Measure</label>
+                                        <select asp-for="NewItemDetails.UnitOfMeasure" class="form-control">
+                                            <option value="GAL">Gallon (GAL)</option>
+                                            <option value="QT">Quart (QT)</option>
+                                            <option value="PT">Pint (PT)</option>
+                                            <option value="L">Liter (L)</option>
+                                            <option value="ML">Milliliter (ML)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label asp-for="NewItemDetails.SellingPrice">Selling Price</label>
+                                        <input asp-for="NewItemDetails.SellingPrice" type="number" step="0.01" class="form-control" placeholder="0.00">
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="NewItemDetails.CalculatedUnitCost">Calculated Unit Cost</label>
+                                        <input asp-for="NewItemDetails.CalculatedUnitCost" type="number" step="0.01" class="form-control" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="NewItemDetails.Description">Description</label>
+                                    <textarea asp-for="NewItemDetails.Description" class="form-control" rows="2" placeholder="Enter item description"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label asp-for="FinishedProductDescription">Finished Product Description</label>
                                 <input asp-for="FinishedProductDescription" class="form-control" placeholder="Enter description">
                                 <span asp-validation-for="FinishedProductDescription" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label asp-for="Status">Status</label>
-                                <select asp-for="Status" class="form-control">
-                                    @foreach (var status in Model.StatusOptions)
-                                    {
-                                        <option value="@status" selected="@Model.Status == status">@status</option>
-                                    }
-                                </select>
+                                <input asp-for="Status" class="form-control" readonly value="Pending" />
                             </div>
                         </div>
                     </div>
@@ -126,65 +208,83 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="items-grid">
-                            <div class="items-header">
-                                <div class="col-material-type">Material Type</div>
-                                <div class="col-material">Material</div>
-                                <div class="col-percentage">% in Mix</div>
-                                <div class="col-qty">Required Qty</div>
-                                <div class="col-cost">Unit Cost</div>
-                                <div class="col-total">Total Cost</div>
-                                <div class="col-action"></div>
-                            </div>
-                            <div id="materialsContainer">
-                                @for (int i = 0; i < Model.Materials.Count; i++)
-                                {
-                                    <div class="item-row" data-index="@i">
-                                        <input type="hidden" asp-for="Materials[i].Id">
-                                        <input type="hidden" asp-for="Materials[i].PaintProductionId">
-                                        
-                                        <div class="col-material-type">
-                                            <select asp-for="Materials[i].MaterialType" class="form-control form-control-sm" onchange="updateMaterialName(this)">
-                                                <option value="">Select Type</option>
-                                                <option value="Blue Paint">Blue Paint</option>
-                                                <option value="Red Paint">Red Paint</option>
-                                                <option value="Yellow Paint">Yellow Paint</option>
-                                                <option value="White Base">White Base</option>
-                                                <option value="Hardener">Hardener</option>
-                                                <option value="Thinner">Thinner</option>
-                                                <option value="Additive">Additive</option>
-                                            </select>
-                                            <input type="hidden" asp-for="Materials[i].MaterialName" class="material-name">
-                                        </div>
-                                        <div class="col-material">
-                                            <select asp-for="Materials[i].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateMaterialCost(this)">
-                                                <option value="">Select Material</option>
-                                                @foreach (var paintItem in Model.PaintItems)
-                                                {
-                                                    <option value="@paintItem.Id" data-cost="@paintItem.UnitCost" data-stock="0.00">@paintItem.Name (@paintItem.SKU)</option>
-                                                }
-                                            </select>
-                                        </div>
-                                        <div class="col-percentage">
-                                            <input asp-for="Materials[i].PercentageInMix" type="number" step="0.01" class="form-control form-control-sm percentage" onchange="calculateProductionMaterial(this)">
-                                        </div>
-                                        <div class="col-qty">
-                                            <input asp-for="Materials[i].RequiredQuantity" type="number" step="0.01" class="form-control form-control-sm required-qty" onchange="calculateProductionMaterial(this)">
-                                        </div>
-                                        <div class="col-cost">
-                                            <input asp-for="Materials[i].UnitCost" type="number" step="0.01" class="form-control form-control-sm unit-cost" onchange="calculateProductionMaterial(this)">
-                                        </div>
-                                        <div class="col-total">
-                                            <input asp-for="Materials[i].TotalCost" type="number" step="0.01" class="form-control form-control-sm total-cost" readonly>
-                                        </div>
-                                        <div class="col-action">
-                                            <button type="button" class="btn-icon btn-danger" onclick="removeMaterial(this)">
-                                                <i class="icon-x"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
+                        <div style="overflow-x: auto;">
+                            <table class="table table-bordered" style="width: 100%; min-width: 900px; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                                        <th style="width: 120px; padding: 12px; text-align: left; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.75px; border-bottom: 1px solid #e2e8f0;">Material Type</th>
+                                        <th style="padding: 12px; text-align: left; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.75px; border-bottom: 1px solid #e2e8f0;">Material</th>
+                                        <th style="width: 100px; padding: 12px; text-align: left; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.75px; border-bottom: 1px solid #e2e8f0;">% in Mix</th>
+                                        <th style="width: 110px; padding: 12px; text-align: right; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.75px; border-bottom: 1px solid #e2e8f0;">Required Qty</th>
+                                        <th style="width: 70px; padding: 12px; text-align: left; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.75px; border-bottom: 1px solid #e2e8f0;">Unit</th>
+                                        <th style="width: 110px; padding: 12px; text-align: right; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.75px; border-bottom: 1px solid #e2e8f0;">Unit Cost</th>
+                                        <th style="width: 110px; padding: 12px; text-align: right; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.75px; border-bottom: 1px solid #e2e8f0;">Total Cost</th>
+                                        <th style="width: 40px; padding: 12px; border-bottom: 1px solid #e2e8f0;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="materialsContainer">
+                                    @for (int i = 0; i < Model.Materials.Count; i++)
+                                    {
+                                        <tr class="material-row" data-index="@i" data-selected="@(Model.Materials[i].PaintItemId?.ToString() ?? "")" style="border-bottom: 1px solid #e2e8f0;">
+                                            <input type="hidden" asp-for="Materials[i].Id">
+                                            <input type="hidden" asp-for="Materials[i].PaintProductionId">
+                                            <input type="hidden" asp-for="Materials[i].ConsumedQuantity" class="consumed-qty">
+
+                                            <td style="padding: 10px; vertical-align: middle;">
+                                                <select asp-for="Materials[i].MaterialType" class="form-control form-control-sm material-type">
+                                                    <option value="">Select Type</option>
+                                                    <option value="Toner">Toner</option>
+                                                    <option value="Base">Base</option>
+                                                    <option value="Hardener">Hardener</option>
+                                                    <option value="Thinner">Thinner</option>
+                                                    <option value="Additive">Additive</option>
+                                                    <option value="Pigment">Pigment</option>
+                                                </select>
+                                                <input type="hidden" asp-for="Materials[i].MaterialName" class="material-name">
+                                            </td>
+                                            <td style="padding: 10px; vertical-align: middle;">
+                                                <select asp-for="Materials[i].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="onMaterialSelected(this)">
+                                                    @Html.Raw(materialOptionsHtml)
+                                                </select>
+                                                <small class="stock-hint text-muted"></small>
+                                            </td>
+                                            <td style="padding: 10px; vertical-align: middle;">
+                                                <input asp-for="Materials[i].PercentageInMix" type="number" step="0.01" class="form-control form-control-sm percentage">
+                                            </td>
+                                            <td style="padding: 10px; vertical-align: middle; text-align: right;">
+                                                <input asp-for="Materials[i].RequiredQuantity" type="number" step="0.0001" min="0" class="form-control form-control-sm required-qty" oninput="calculateProductionMaterial(this)" style="text-align: right;">
+                                            </td>
+                                            <td style="padding: 10px; vertical-align: middle;">
+                                                <select asp-for="Materials[i].Unit" class="form-control form-control-sm unit-input" onchange="onUnitChanged(this)">
+                                                    <option value="">Select Unit</option>
+                                                    <option value="L">L (Liter)</option>
+                                                    <option value="mL">mL (Milliliter)</option>
+                                                    <option value="GAL">GAL (Gallon)</option>
+                                                    <option value="QT">QT (Quart)</option>
+                                                    <option value="PT">PT (Pint)</option>
+                                                    <option value="KG">KG (Kilogram)</option>
+                                                    <option value="G">G (Gram)</option>
+                                                    <option value="LB">LB (Pound)</option>
+                                                    <option value="OZ">OZ (Ounce)</option>
+                                                    <option value="Each">Each</option>
+                                                </select>
+                                            </td>
+                                            <td style="padding: 10px; vertical-align: middle; text-align: right;">
+                                                <input asp-for="Materials[i].UnitCost" type="number" step="0.0001" min="0" class="form-control form-control-sm unit-cost" oninput="calculateProductionMaterial(this)" style="text-align: right;">
+                                            </td>
+                                            <td style="padding: 10px; vertical-align: middle; text-align: right;">
+                                                <input asp-for="Materials[i].TotalCost" type="number" step="0.01" class="form-control form-control-sm total-cost" readonly style="text-align: right;">
+                                            </td>
+                                            <td style="padding: 10px; vertical-align: middle; text-align: center;">
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="removeMaterial(this)">
+                                                    <i class="icon-x"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <template id="materialOptionsTemplate">@Html.Raw(materialOptionsHtml)</template>
                         </div>
                     </div>
                 </div>
@@ -197,15 +297,15 @@
                     <div class="card-body">
                         <div class="summary-row">
                             <label>Material Cost</label>
-                            <input asp-for="MaterialCost" type="number" step="0.01" class="form-control summary-input" onchange="calculateProductionCost()">
+                            <input asp-for="MaterialCost" type="number" step="0.01" class="form-control summary-input" readonly>
                         </div>
                         <div class="summary-row">
                             <label>Labor Cost</label>
-                            <input asp-for="LaborCost" type="number" step="0.01" class="form-control summary-input" onchange="calculateProductionCost()">
+                            <input asp-for="LaborCost" type="number" step="0.01" min="0" class="form-control summary-input" oninput="calculateProductionCost()">
                         </div>
                         <div class="summary-row">
                             <label>Overhead Cost</label>
-                            <input asp-for="OverheadCost" type="number" step="0.01" class="form-control summary-input" onchange="calculateProductionCost()">
+                            <input asp-for="OverheadCost" type="number" step="0.01" min="0" class="form-control summary-input" oninput="calculateProductionCost()">
                         </div>
                         <div class="summary-row summary-total">
                             <label>Production Cost</label>
@@ -213,7 +313,7 @@
                         </div>
                         <div class="summary-row">
                             <label>Finished Product Cost</label>
-                            <input asp-for="FinishedProductCost" type="number" step="0.01" class="form-control summary-input" onchange="calculateCostPerUnit()">
+                            <input asp-for="FinishedProductCost" type="number" step="0.01" class="form-control summary-input" readonly>
                         </div>
                         <div class="summary-row">
                             <label>Cost Per Unit</label>
@@ -312,45 +412,60 @@
 <script>
     let materialIndex = @Model.Materials.Count;
 
+    // Option markup is rendered by the server once and cloned for every new row
+    const materialOptionsMarkup = document.getElementById('materialOptionsTemplate').innerHTML;
+
     function addMaterial() {
         const container = document.getElementById('materialsContainer');
         const index = materialIndex++;
-        
+
         const materialHtml = `
             <div class="item-row" data-index="${index}">
-                <input type="hidden" name="Materials[${index}].Id" value="">
-                <input type="hidden" name="Materials[${index}].PaintProductionId" value="">
-                
+                <input type="hidden" name="Materials[${index}].Id" value="0">
+                <input type="hidden" name="Materials[${index}].PaintProductionId" value="0">
+                <input type="hidden" name="Materials[${index}].ConsumedQuantity" class="consumed-qty" value="0">
+
                 <div class="col-material-type">
-                    <select name="Materials[${index}].MaterialType" class="form-control form-control-sm" onchange="updateMaterialName(this)">
+                    <select name="Materials[${index}].MaterialType" class="form-control form-control-sm material-type">
                         <option value="">Select Type</option>
-                        <option value="Blue Paint">Blue Paint</option>
-                        <option value="Red Paint">Red Paint</option>
-                        <option value="Yellow Paint">Yellow Paint</option>
-                        <option value="White Base">White Base</option>
+                        <option value="Toner">Toner</option>
+                        <option value="Base">Base</option>
                         <option value="Hardener">Hardener</option>
                         <option value="Thinner">Thinner</option>
                         <option value="Additive">Additive</option>
+                        <option value="Pigment">Pigment</option>
                     </select>
                     <input type="hidden" name="Materials[${index}].MaterialName" class="material-name">
                 </div>
                 <div class="col-material">
-                    <select name="Materials[${index}].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateMaterialCost(this)">
-                        <option value="">Select Material</option>
-                        @foreach (var paintItem in Model.PaintItems)
-                        {
-                            <option value="@paintItem.Id" data-cost="@paintItem.UnitCost" data-stock="0.00">@paintItem.Name (@paintItem.SKU)</option>
-                        }
+                    <select name="Materials[${index}].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="onMaterialSelected(this)">
+                        ${materialOptionsMarkup}
                     </select>
+                    <small class="stock-hint text-muted"></small>
                 </div>
                 <div class="col-percentage">
-                    <input name="Materials[${index}].PercentageInMix" type="number" step="0.01" class="form-control form-control-sm percentage" onchange="calculateProductionMaterial(this)">
+                    <input name="Materials[${index}].PercentageInMix" type="number" step="0.01" class="form-control form-control-sm percentage">
                 </div>
                 <div class="col-qty">
-                    <input name="Materials[${index}].RequiredQuantity" type="number" step="0.01" class="form-control form-control-sm required-qty" onchange="calculateProductionMaterial(this)">
+                    <input name="Materials[${index}].RequiredQuantity" type="number" step="0.0001" min="0" class="form-control form-control-sm required-qty" oninput="calculateProductionMaterial(this)">
+                </div>
+                <div class="col-unit">
+                    <select name="Materials[${index}].Unit" class="form-control form-control-sm unit-input" onchange="onUnitChanged(this)">
+                        <option value="">Select Unit</option>
+                        <option value="L">L (Liter)</option>
+                        <option value="mL">mL (Milliliter)</option>
+                        <option value="GAL">GAL (Gallon)</option>
+                        <option value="QT">QT (Quart)</option>
+                        <option value="PT">PT (Pint)</option>
+                        <option value="KG">KG (Kilogram)</option>
+                        <option value="G">G (Gram)</option>
+                        <option value="LB">LB (Pound)</option>
+                        <option value="OZ">OZ (Ounce)</option>
+                        <option value="Each">Each</option>
+                    </select>
                 </div>
                 <div class="col-cost">
-                    <input name="Materials[${index}].UnitCost" type="number" step="0.01" class="form-control form-control-sm unit-cost" onchange="calculateProductionMaterial(this)">
+                    <input name="Materials[${index}].UnitCost" type="number" step="0.0001" min="0" class="form-control form-control-sm unit-cost" oninput="calculateProductionMaterial(this)">
                 </div>
                 <div class="col-total">
                     <input name="Materials[${index}].TotalCost" type="number" step="0.01" class="form-control form-control-sm total-cost" readonly>
@@ -362,9 +477,103 @@
                 </div>
             </div>
         `;
-        
+
         container.insertAdjacentHTML('beforeend', materialHtml);
+        filterMaterialsByWarehouse();
         updateMaterialCount();
+    }
+
+    function selectedOptionOf(select) {
+        return select && select.selectedIndex >= 0 ? select.options[select.selectedIndex] : null;
+    }
+
+    // Only materials stocked in the selected warehouse can be consumed
+    function filterMaterialsByWarehouse() {
+        const warehouseId = document.getElementById('WarehouseId').value;
+
+        document.querySelectorAll('#materialsContainer .paint-item-select').forEach(select => {
+            let clearedSelection = false;
+
+            Array.from(select.options).forEach(option => {
+                if (!option.value) {
+                    return;
+                }
+
+                const matches = !warehouseId || option.getAttribute('data-warehouse') === warehouseId;
+                option.hidden = !matches;
+                option.disabled = !matches;
+
+                if (!matches && select.value === option.value) {
+                    clearedSelection = true;
+                }
+            });
+
+            if (clearedSelection) {
+                select.value = '';
+                onMaterialSelected(select);
+            }
+        });
+    }
+
+    function onMaterialSelected(select) {
+        const row = select.closest('.item-row');
+        const option = selectedOptionOf(select);
+        const unitCostInput = row.querySelector('.unit-cost');
+        const materialNameInput = row.querySelector('.material-name');
+        const unitInput = row.querySelector('.unit-input');
+
+        if (option && option.value) {
+            unitCostInput.value = option.getAttribute('data-cost') || '0';
+            materialNameInput.value = option.getAttribute('data-name') || '';
+            const unitValue = option.getAttribute('data-uom') || '';
+            // Set dropdown value
+            unitInput.value = unitValue;
+        } else {
+            unitCostInput.value = '';
+            materialNameInput.value = '';
+            unitInput.value = '';
+        }
+
+        calculateProductionMaterial(select);
+    }
+
+    function onUnitChanged(select) {
+        const row = select.closest('.item-row');
+        const materialSelect = row.querySelector('.paint-item-select');
+        const selectedOption = materialSelect ? materialSelect.options[materialSelect.selectedIndex] : null;
+        const originalUnit = selectedOption ? selectedOption.getAttribute('data-uom') : '';
+        const newUnit = select.value;
+
+        if (originalUnit && newUnit && originalUnit !== newUnit) {
+            // Show warning that unit cost will be adjusted
+            const unitCostInput = row.querySelector('.unit-cost');
+            const originalCost = parseFloat(unitCostInput.value) || 0;
+
+            if (originalCost > 0) {
+                // Store original unit for reference
+                select.dataset.originalUnit = originalUnit;
+                select.dataset.originalCost = originalCost;
+
+                // Show warning message
+                const warningDiv = row.querySelector('.unit-warning') || document.createElement('small');
+                warningDiv.className = 'unit-warning text-warning';
+                warningDiv.style.display = 'block';
+                warningDiv.style.marginTop = '4px';
+                warningDiv.textContent = `⚠️ Unit changed from ${originalUnit} to ${newUnit}. Cost will be adjusted automatically.`;
+
+                if (!row.querySelector('.unit-warning')) {
+                    select.parentNode.appendChild(warningDiv);
+                }
+            }
+        } else {
+            // Remove warning if unit matches original
+            const warningDiv = row.querySelector('.unit-warning');
+            if (warningDiv) {
+                warningDiv.remove();
+            }
+        }
+
+        calculateProductionMaterial(select);
     }
 
     function removeMaterial(button) {
@@ -387,39 +596,55 @@
         updateMaterialCount();
     }
 
-    function updateMaterialName(select) {
-        const row = select.closest('.item-row');
-        const materialNameInput = row.querySelector('.material-name');
-        materialNameInput.value = select.value;
-    }
-
-    function updateMaterialCost(select) {
-        const row = select.closest('.item-row');
-        const selectedOption = select.options[select.selectedIndex];
-        const unitCostInput = row.querySelector('.unit-cost');
-        
-        if (selectedOption && selectedOption.value) {
-            const cost = selectedOption.getAttribute('data-cost') || '0';
-            unitCostInput.value = cost;
-            calculateProductionMaterial(select);
-        }
-    }
-
     function calculateProductionMaterial(element) {
         const row = element.closest('.item-row');
-        const requiredQty = parseFloat(row.querySelector('.required-qty').value) || 0;
+        const qtyInput = row.querySelector('.required-qty');
+        const requiredQty = parseFloat(qtyInput.value) || 0;
         const unitCost = parseFloat(row.querySelector('.unit-cost').value) || 0;
-        const totalCost = requiredQty * unitCost;
-        
-        row.querySelector('.total-cost').value = totalCost.toFixed(2);
+
+        // A single-step production consumes exactly what it requires
+        row.querySelector('.consumed-qty').value = requiredQty;
+        row.querySelector('.total-cost').value = (requiredQty * unitCost).toFixed(2);
+
+        updateStockHint(row);
         calculateMaterialCost();
     }
 
+    function updateStockHint(row) {
+        const select = row.querySelector('.paint-item-select');
+        const hint = row.querySelector('.stock-hint');
+        const qtyInput = row.querySelector('.required-qty');
+        const option = selectedOptionOf(select);
+
+        if (!hint) {
+            return;
+        }
+
+        if (!option || !option.value) {
+            hint.textContent = '';
+            qtyInput.classList.remove('is-invalid');
+            return;
+        }
+
+        const available = parseFloat(option.getAttribute('data-stock')) || 0;
+        const uom = option.getAttribute('data-uom') || '';
+        const requested = parseFloat(qtyInput.value) || 0;
+
+        if (requested > available) {
+            hint.textContent = `Only ${available} ${uom} available`;
+            hint.classList.add('text-danger');
+            qtyInput.classList.add('is-invalid');
+        } else {
+            hint.textContent = `Available: ${available} ${uom}`;
+            hint.classList.remove('text-danger');
+            qtyInput.classList.remove('is-invalid');
+        }
+    }
+
     function calculateMaterialCost() {
-        const totalCosts = document.querySelectorAll('.total-cost');
         let materialCost = 0;
-        
-        totalCosts.forEach(input => {
+
+        document.querySelectorAll('#materialsContainer .total-cost').forEach(input => {
             materialCost += parseFloat(input.value) || 0;
         });
 
@@ -440,10 +665,12 @@
 
     function calculateCostPerUnit() {
         const productionCost = parseFloat(document.getElementById('ProductionCost').value) || 0;
-        const outputQty = parseFloat(document.getElementById('OutputQuantity').value) || 1;
+        const outputQty = parseFloat(document.getElementById('OutputQuantity').value) || 0;
 
         const costPerUnit = outputQty > 0 ? productionCost / outputQty : 0;
         document.getElementById('CostPerUnit').value = costPerUnit.toFixed(2);
+        document.getElementById('FinishedProductCost').value = productionCost.toFixed(2);
+        calculateNewItemUnitCost();
     }
 
     function updateMaterialCount() {
@@ -456,23 +683,118 @@
         document.getElementById('sidebarTotalCost').textContent = '$' + productionCost.toFixed(2);
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const rows = document.querySelectorAll('.item-row');
-        rows.forEach((row) => {
-            const unitCostInput = row.querySelector('.unit-cost');
-            const materialNameInput = row.querySelector('.material-name');
-            const typeSelect = row.querySelector('.col-material-type select');
-            
-            if (typeSelect && materialNameInput) {
-                materialNameInput.value = typeSelect.value;
-            }
-            
-            if (unitCostInput) {
-                const event = new Event('change');
-                unitCostInput.dispatchEvent(event);
+    function toggleNewItemForm() {
+        const checkbox = document.getElementById('createNewItemCheckbox');
+        const newItemForm = document.getElementById('newItemForm');
+        const finishedProductSelect = document.getElementById('finishedProductSelect');
+        
+        if (checkbox.checked) {
+            newItemForm.style.display = 'block';
+            finishedProductSelect.value = '';
+            finishedProductSelect.disabled = true;
+            calculateNewItemUnitCost();
+        } else {
+            newItemForm.style.display = 'none';
+            finishedProductSelect.disabled = false;
+        }
+    }
+
+    function calculateNewItemUnitCost() {
+        const calculatedUnitCostInput = document.getElementById('NewItemDetails_CalculatedUnitCost');
+        if (!calculatedUnitCostInput) {
+            return;
+        }
+
+        const productionCost = parseFloat(document.getElementById('ProductionCost').value) || 0;
+        const outputQty = parseFloat(document.getElementById('OutputQuantity').value) || 0;
+
+        calculatedUnitCostInput.value = (outputQty > 0 ? productionCost / outputQty : 0).toFixed(4);
+    }
+
+    function validateBeforeSubmit(event) {
+        const errors = [];
+        const rows = Array.from(document.querySelectorAll('#materialsContainer .item-row'));
+
+        const usableRows = rows.filter(row => {
+            const select = row.querySelector('.paint-item-select');
+            const qty = parseFloat(row.querySelector('.required-qty').value) || 0;
+            return select.value && qty > 0;
+        });
+
+        if (usableRows.length === 0) {
+            errors.push('Add at least one raw material with a quantity greater than zero.');
+        }
+
+        usableRows.forEach(row => {
+            const option = selectedOptionOf(row.querySelector('.paint-item-select'));
+            const available = parseFloat(option.getAttribute('data-stock')) || 0;
+            const requested = parseFloat(row.querySelector('.required-qty').value) || 0;
+
+            if (requested > available) {
+                errors.push(`${option.getAttribute('data-name')}: only ${available} ${option.getAttribute('data-uom')} in stock, ${requested} requested.`);
             }
         });
+
+        const duplicates = usableRows
+            .map(row => row.querySelector('.paint-item-select').value)
+            .filter((value, index, all) => all.indexOf(value) !== index);
+
+        if (duplicates.length > 0) {
+            errors.push('The same raw material is selected on more than one row. Combine them into a single line.');
+        }
+
+        if ((parseFloat(document.getElementById('OutputQuantity').value) || 0) <= 0) {
+            errors.push('Output quantity must be greater than zero.');
+        }
+
+        const createNewItem = document.getElementById('createNewItemCheckbox').checked;
+        const newItemName = document.getElementById('NewItemDetails_Name');
+
+        if (createNewItem && (!newItemName || !newItemName.value.trim())) {
+            errors.push('Enter a name for the new item.');
+        }
+
+        if (!createNewItem && !document.getElementById('finishedProductSelect').value) {
+            errors.push("Select a finished product or tick 'Create New Item from Production'.");
+        }
+
+        if (errors.length > 0) {
+            event.preventDefault();
+            alert(errors.join('\n'));
+            return false;
+        }
+
+        return true;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Restore any selection that came back from the server (e.g. after a validation error)
+        document.querySelectorAll('#materialsContainer .item-row').forEach(row => {
+            const paintItemSelect = row.querySelector('.paint-item-select');
+            const selected = row.getAttribute('data-selected');
+
+            if (paintItemSelect && selected) {
+                paintItemSelect.value = selected;
+            }
+        });
+
+        filterMaterialsByWarehouse();
+
+        document.querySelectorAll('#materialsContainer .item-row').forEach(row => {
+            const select = row.querySelector('.paint-item-select');
+            if (select && select.value) {
+                onMaterialSelected(select);
+            }
+        });
+
+        document.getElementById('WarehouseId').addEventListener('change', filterMaterialsByWarehouse);
+        document.getElementById('OutputQuantity').addEventListener('input', calculateCostPerUnit);
+        document.querySelector('form.bill-form').addEventListener('submit', validateBeforeSubmit);
+
+        toggleNewItemForm();
+        calculateMaterialCost();
         updateMaterialCount();
-        updateSidebarTotalCost();
     });
 </script>
+
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

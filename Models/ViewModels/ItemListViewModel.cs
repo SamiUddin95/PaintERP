@@ -6,6 +6,7 @@ public class ItemListViewModel
     public string SearchTerm { get; set; } = string.Empty;
     public string FilterType { get; set; } = "All"; // All, Inventory, Non Inventory, Service, Assembly, Raw Material, Finished Product
     public string FilterCategory { get; set; } = "All";
+    public string FilterSource { get; set; } = "All"; // All, Production, NonProduction
     public int TotalCount { get; set; }
     public decimal TotalInventoryValue { get; set; }
     public int LowStockCount { get; set; }
@@ -27,4 +28,5 @@ public class ItemListItem
     public decimal SellingPrice { get; set; }
     public string ColorHex { get; set; } = string.Empty;
     public bool IsHazardousMaterial { get; set; }
+    public string UnitOfMeasure { get; set; } = string.Empty;
 }

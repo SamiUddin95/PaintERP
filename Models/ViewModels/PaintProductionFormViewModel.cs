@@ -41,10 +41,14 @@ public class PaintProductionFormViewModel
     [Display(Name = "Finished Product")]
     public int? FinishedProductId { get; set; }
 
+    [Display(Name = "Create New Item")]
+    public bool CreateNewItem { get; set; } = false;
+
+    public NewItemDetailsViewModel NewItemDetails { get; set; } = new NewItemDetailsViewModel();
+
     [Display(Name = "Formula")]
     public int? FormulaId { get; set; }
 
-    [Required]
     [Display(Name = "Finished Product Description")]
     [MaxLength(500)]
     public string FinishedProductDescription { get; set; } = string.Empty;
@@ -109,15 +113,16 @@ public class PaintProductionMaterialViewModel
     [Display(Name = "Paint Item")]
     public int? PaintItemId { get; set; }
 
-    [Required]
     [Display(Name = "Required Quantity")]
     public decimal RequiredQuantity { get; set; }
 
-    [Required]
     [Display(Name = "Consumed Quantity")]
     public decimal ConsumedQuantity { get; set; }
 
-    [Required]
+    [Display(Name = "Unit")]
+    [MaxLength(20)]
+    public string Unit { get; set; } = string.Empty;
+
     [Display(Name = "Unit Cost")]
     public decimal UnitCost { get; set; }
 
@@ -146,10 +151,43 @@ public class PaintProductionPaintItemListItem
     public string Name { get; set; } = string.Empty;
     public string SKU { get; set; } = string.Empty;
     public decimal UnitCost { get; set; }
+    public int WarehouseId { get; set; }
+    public decimal CurrentStock { get; set; }
+    public string UnitOfMeasure { get; set; } = string.Empty;
 }
 
 public class PaintProductionFormulaListItem
 {
     public int Id { get; set; }
     public string FormulaName { get; set; } = string.Empty;
+}
+
+public class NewItemDetailsViewModel
+{
+    // Validated conditionally in the controller (only when CreateNewItem is checked)
+    [Display(Name = "Item Name")]
+    [MaxLength(200)]
+    public string Name { get; set; } = string.Empty;
+
+    [Display(Name = "SKU")]
+    [MaxLength(50)]
+    public string SKU { get; set; } = string.Empty;
+
+    [Display(Name = "Category")]
+    [MaxLength(100)]
+    public string Category { get; set; } = "Finished Product";
+
+    [Display(Name = "Unit of Measure")]
+    [MaxLength(20)]
+    public string UnitOfMeasure { get; set; } = "GAL";
+
+    [Display(Name = "Selling Price")]
+    public decimal SellingPrice { get; set; }
+
+    [Display(Name = "Description")]
+    [MaxLength(500)]
+    public string Description { get; set; } = string.Empty;
+
+    [Display(Name = "Calculated Unit Cost")]
+    public decimal CalculatedUnitCost { get; set; }
 }

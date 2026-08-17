@@ -21,16 +21,26 @@ public class InventoryService : IInventoryService
         if (paintItem == null)
             return InventoryResult.FailureResult("Paint item not found in specified warehouse");
 
-        var stockBefore = paintItem.StockQuantity;
+        var stockBefore = paintItem.CurrentStock;
 
         if (stockBefore < quantity)
-            return InventoryResult.FailureResult($"Insufficient stock. Available: {stockBefore}, Required: {quantity}");
+            return InventoryResult.FailureResult($"Insufficient stock. Available: {stockBefore:0.##}, Required: {quantity:0.##}");
 
-        // Update stock
-        paintItem.StockQuantity -= (int)quantity;
+        // Log before changes
+        var currentStockBefore = paintItem.CurrentStock;
+        var availableStockBefore = paintItem.AvailableStock;
+
+        // Update stock (CurrentStock is the authoritative decimal balance)
         paintItem.CurrentStock -= quantity;
         paintItem.AvailableStock -= quantity;
+        paintItem.StockQuantity = (int)Math.Floor(paintItem.CurrentStock);
         paintItem.UpdatedAtUtc = DateTime.UtcNow;
+
+        // Log the stock reduction
+        System.Diagnostics.Debug.WriteLine($"Stock Reduction - Item: {paintItem.Name}");
+        System.Diagnostics.Debug.WriteLine($"  BEFORE: CurrentStock={currentStockBefore:0.####}, AvailableStock={availableStockBefore:0.####}");
+        System.Diagnostics.Debug.WriteLine($"  DEDUCT: {quantity:0.####}");
+        System.Diagnostics.Debug.WriteLine($"  AFTER:  CurrentStock={paintItem.CurrentStock:0.####}, AvailableStock={paintItem.AvailableStock:0.####}");
 
         // Update inventory value
         await UpdateInventoryValuationAsync(paintItemId, cancellationToken);
@@ -55,7 +65,10 @@ public class InventoryService : IInventoryService
         _context.StockLedgers.Add(ledgerEntry);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return InventoryResult.SuccessResult(stockBefore, paintItem.StockQuantity, paintItem.InventoryValue, "Stock reduced successfully");
+        // Verify after save
+        System.Diagnostics.Debug.WriteLine($"Stock Reduction AFTER Save - Item: {paintItem.Name}, CurrentStock: {paintItem.CurrentStock:0.####}, AvailableStock: {paintItem.AvailableStock:0.####}");
+
+        return InventoryResult.SuccessResult(stockBefore, paintItem.CurrentStock, paintItem.InventoryValue, "Stock reduced successfully");
     }
 
     public async Task<InventoryResult> IncreaseStockAsync(int paintItemId, int warehouseId, decimal quantity, string transactionType, int transactionId, string notes = "", CancellationToken cancellationToken = default)
@@ -66,12 +79,12 @@ public class InventoryService : IInventoryService
         if (paintItem == null)
             return InventoryResult.FailureResult("Paint item not found in specified warehouse");
 
-        var stockBefore = paintItem.StockQuantity;
+        var stockBefore = paintItem.CurrentStock;
 
-        // Update stock
-        paintItem.StockQuantity += (int)quantity;
+        // Update stock (CurrentStock is the authoritative decimal balance)
         paintItem.CurrentStock += quantity;
         paintItem.AvailableStock += quantity;
+        paintItem.StockQuantity = (int)Math.Floor(paintItem.CurrentStock);
         paintItem.UpdatedAtUtc = DateTime.UtcNow;
 
         // Update inventory value
@@ -97,7 +110,7 @@ public class InventoryService : IInventoryService
         _context.StockLedgers.Add(ledgerEntry);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return InventoryResult.SuccessResult(stockBefore, paintItem.StockQuantity, paintItem.InventoryValue, "Stock increased successfully");
+        return InventoryResult.SuccessResult(stockBefore, paintItem.CurrentStock, paintItem.InventoryValue, "Stock increased successfully");
     }
 
     public async Task<InventoryResult> TransferStockAsync(int paintItemId, int sourceWarehouseId, int destinationWarehouseId, decimal quantity, string transactionType, int transactionId, CancellationToken cancellationToken = default)
