@@ -369,6 +369,14 @@ public class PaintProductionController : Controller
                 QCReport = model.QCReport,
                 QCNotes = model.QCNotes,
                 ProductionNotes = model.ProductionNotes,
+                CreateNewItem = model.CreateNewItem,
+                NewItemName = model.CreateNewItem ? model.NewItemDetails.Name : null,
+                NewItemSKU = model.CreateNewItem ? model.NewItemDetails.SKU : null,
+                NewItemCategory = model.CreateNewItem ? model.NewItemDetails.Category : null,
+                NewItemUnitOfMeasure = model.CreateNewItem ? model.NewItemDetails.UnitOfMeasure : null,
+                NewItemSellingPrice = model.CreateNewItem ? model.NewItemDetails.SellingPrice : null,
+                NewItemCalculatedUnitCost = model.CreateNewItem ? model.NewItemDetails.CalculatedUnitCost : null,
+                NewItemDescription = model.CreateNewItem ? model.NewItemDetails.Description : null,
                 CreatedAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow,
                 CreatedBy = currentUser,
@@ -398,7 +406,7 @@ public class PaintProductionController : Controller
                     SalesUnit = model.NewItemDetails.UnitOfMeasure,
                     CostMethod = "Average Cost",
                     PurchasePrice = calculatedUnitCost,
-                    SellingPrice = model.NewItemDetails.SellingPrice,
+                    SellingPrice = model.NewItemDetails.SellingPrice ?? 0,
                     UnitCost = calculatedUnitCost,
                     StockQuantity = 0,
                     CurrentStock = 0,
@@ -426,7 +434,7 @@ public class PaintProductionController : Controller
                     ConsumedQuantity = material.ConsumedQuantity,
                     UnitCost = material.UnitCost,
                     TotalCost = material.TotalCost,
-                    PercentageInMix = material.PercentageInMix,
+                    PercentageInMix = material.PercentageInMix ?? 0,
                     StockBefore = material.StockBefore,
                     StockAfter = material.StockAfter
                 });
@@ -758,6 +766,17 @@ public class PaintProductionController : Controller
             QCReport = production.QCReport,
             QCNotes = production.QCNotes,
             ProductionNotes = production.ProductionNotes,
+            CreateNewItem = production.CreateNewItem,
+            NewItemDetails = production.CreateNewItem ? new NewItemDetailsViewModel
+            {
+                Name = production.NewItemName,
+                SKU = production.NewItemSKU,
+                Category = production.NewItemCategory,
+                UnitOfMeasure = production.NewItemUnitOfMeasure,
+                SellingPrice = production.NewItemSellingPrice,
+                CalculatedUnitCost = production.NewItemCalculatedUnitCost,
+                Description = production.NewItemDescription
+            } : null,
             Materials = production.Materials.Select(m => new PaintProductionMaterialViewModel
             {
                 Id = m.Id,
@@ -835,6 +854,14 @@ public class PaintProductionController : Controller
         production.QCReport = model.QCReport;
         production.QCNotes = model.QCNotes;
         production.ProductionNotes = model.ProductionNotes;
+        production.CreateNewItem = model.CreateNewItem;
+        production.NewItemName = model.CreateNewItem ? model.NewItemDetails.Name : null;
+        production.NewItemSKU = model.CreateNewItem ? model.NewItemDetails.SKU : null;
+        production.NewItemCategory = model.CreateNewItem ? model.NewItemDetails.Category : null;
+        production.NewItemUnitOfMeasure = model.CreateNewItem ? model.NewItemDetails.UnitOfMeasure : null;
+        production.NewItemSellingPrice = model.CreateNewItem ? model.NewItemDetails.SellingPrice : null;
+        production.NewItemCalculatedUnitCost = model.CreateNewItem ? model.NewItemDetails.CalculatedUnitCost : null;
+        production.NewItemDescription = model.CreateNewItem ? model.NewItemDetails.Description : null;
         production.UpdatedAtUtc = DateTime.UtcNow;
         production.UpdatedBy = User.Identity?.Name ?? "System";
 
@@ -853,7 +880,7 @@ public class PaintProductionController : Controller
                 ConsumedQuantity = material.ConsumedQuantity,
                 UnitCost = material.UnitCost,
                 TotalCost = material.TotalCost,
-                PercentageInMix = material.PercentageInMix,
+                PercentageInMix = material.PercentageInMix ?? 0,
                 StockBefore = material.StockBefore,
                 StockAfter = material.StockAfter
             };

@@ -37,7 +37,7 @@
             </div>
             <div class="summary-item">
                 <span>Selling Price</span>
-                <strong>@Model.SellingPrice.ToString("C")</strong>
+                <strong>@(Model.SellingPrice?.ToString("C") ?? "N/A")</strong>
             </div>
         </div>
 

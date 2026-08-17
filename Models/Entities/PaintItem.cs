@@ -10,7 +10,7 @@ public class PaintItem
 
     // Identification
     [MaxLength(50)]
-    public string SKU { get; set; } = string.Empty;
+    public string? SKU { get; set; }
     [MaxLength(50)]
     public string UPCBarcode { get; set; } = string.Empty;
     [Required]
@@ -41,7 +41,7 @@ public class PaintItem
 
     // Pricing
     public decimal PurchasePrice { get; set; }
-    public decimal SellingPrice { get; set; }
+    public decimal? SellingPrice { get; set; }
     public decimal MSRP { get; set; }
 
     // Inventory Levels

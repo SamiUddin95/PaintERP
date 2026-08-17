@@ -831,7 +831,7 @@ public class SalesInvoiceController : Controller
                 Id = p.Id,
                 Name = p.Name,
                 SKU = p.SKU ?? "",
-                SellingPrice = p.SellingPrice,
+                SellingPrice = p.SellingPrice ?? 0,
                 UnitOfMeasure = p.UnitOfMeasure ?? "",
                 CurrentStock = p.CurrentStock
             })

@@ -1072,6 +1072,10 @@ public class PaintErpDbContext(DbContextOptions<PaintErpDbContext> options) : Db
 
         // PaintItem indexes
         modelBuilder.Entity<PaintItem>()
+            .Property(p => p.SKU)
+            .IsRequired(false);
+
+        modelBuilder.Entity<PaintItem>()
             .HasIndex(p => p.SKU);
         
         modelBuilder.Entity<PaintItem>()

@@ -143,7 +143,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label asp-for="NewItemDetails.SKU">SKU</label>
-                                        <input asp-for="NewItemDetails.SKU" class="form-control" placeholder="Auto-generated if empty">
+                                        <input asp-for="NewItemDetails.SKU" class="form-control" placeholder="Auto-generated if empty" data-val="false">
                                     </div>
                                 </div>
                                 <div class="form-row">
@@ -225,7 +225,7 @@
                                 <tbody id="materialsContainer">
                                     @for (int i = 0; i < Model.Materials.Count; i++)
                                     {
-                                        <tr class="material-row" data-index="@i" data-selected="@(Model.Materials[i].PaintItemId?.ToString() ?? "")" style="border-bottom: 1px solid #e2e8f0;">
+                                        <tr class="material-row" data-index="@i" data-selected="@(Model.Materials[i].PaintItemId.HasValue ? Model.Materials[i].PaintItemId.Value.ToString() : "")" style="border-bottom: 1px solid #e2e8f0;">
                                             <input type="hidden" asp-for="Materials[i].Id">
                                             <input type="hidden" asp-for="Materials[i].PaintProductionId">
                                             <input type="hidden" asp-for="Materials[i].ConsumedQuantity" class="consumed-qty">
@@ -420,12 +420,12 @@
         const index = materialIndex++;
 
         const materialHtml = `
-            <div class="item-row" data-index="${index}">
+            <tr class="material-row" data-index="${index}" data-selected="" style="border-bottom: 1px solid #e2e8f0;">
                 <input type="hidden" name="Materials[${index}].Id" value="0">
                 <input type="hidden" name="Materials[${index}].PaintProductionId" value="0">
                 <input type="hidden" name="Materials[${index}].ConsumedQuantity" class="consumed-qty" value="0">
 
-                <div class="col-material-type">
+                <td style="padding: 10px; vertical-align: middle;">
                     <select name="Materials[${index}].MaterialType" class="form-control form-control-sm material-type">
                         <option value="">Select Type</option>
                         <option value="Toner">Toner</option>
@@ -436,20 +436,20 @@
                         <option value="Pigment">Pigment</option>
                     </select>
                     <input type="hidden" name="Materials[${index}].MaterialName" class="material-name">
-                </div>
-                <div class="col-material">
+                </td>
+                <td style="padding: 10px; vertical-align: middle;">
                     <select name="Materials[${index}].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="onMaterialSelected(this)">
                         ${materialOptionsMarkup}
                     </select>
                     <small class="stock-hint text-muted"></small>
-                </div>
-                <div class="col-percentage">
+                </td>
+                <td style="padding: 10px; vertical-align: middle;">
                     <input name="Materials[${index}].PercentageInMix" type="number" step="0.01" class="form-control form-control-sm percentage">
-                </div>
-                <div class="col-qty">
-                    <input name="Materials[${index}].RequiredQuantity" type="number" step="0.0001" min="0" class="form-control form-control-sm required-qty" oninput="calculateProductionMaterial(this)">
-                </div>
-                <div class="col-unit">
+                </td>
+                <td style="padding: 10px; vertical-align: middle; text-align: right;">
+                    <input name="Materials[${index}].RequiredQuantity" type="number" step="0.0001" min="0" class="form-control form-control-sm required-qty" oninput="calculateProductionMaterial(this)" style="text-align: right;">
+                </td>
+                <td style="padding: 10px; vertical-align: middle;">
                     <select name="Materials[${index}].Unit" class="form-control form-control-sm unit-input" onchange="onUnitChanged(this)">
                         <option value="">Select Unit</option>
                         <option value="L">L (Liter)</option>
@@ -463,19 +463,19 @@
                         <option value="OZ">OZ (Ounce)</option>
                         <option value="Each">Each</option>
                     </select>
-                </div>
-                <div class="col-cost">
-                    <input name="Materials[${index}].UnitCost" type="number" step="0.0001" min="0" class="form-control form-control-sm unit-cost" oninput="calculateProductionMaterial(this)">
-                </div>
-                <div class="col-total">
-                    <input name="Materials[${index}].TotalCost" type="number" step="0.01" class="form-control form-control-sm total-cost" readonly>
-                </div>
-                <div class="col-action">
-                    <button type="button" class="btn-icon btn-danger" onclick="removeMaterial(this)">
+                </td>
+                <td style="padding: 10px; vertical-align: middle; text-align: right;">
+                    <input name="Materials[${index}].UnitCost" type="number" step="0.0001" min="0" class="form-control form-control-sm unit-cost" oninput="calculateProductionMaterial(this)" style="text-align: right;">
+                </td>
+                <td style="padding: 10px; vertical-align: middle; text-align: right;">
+                    <input name="Materials[${index}].TotalCost" type="number" step="0.01" class="form-control form-control-sm total-cost" readonly style="text-align: right;">
+                </td>
+                <td style="padding: 10px; vertical-align: middle; text-align: center;">
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeMaterial(this)">
                         <i class="icon-x"></i>
                     </button>
-                </div>
-            </div>
+                </td>
+            </tr>
         `;
 
         container.insertAdjacentHTML('beforeend', materialHtml);
@@ -487,36 +487,26 @@
         return select && select.selectedIndex >= 0 ? select.options[select.selectedIndex] : null;
     }
 
-    // Only materials stocked in the selected warehouse can be consumed
+    // Show all materials regardless of warehouse selection
     function filterMaterialsByWarehouse() {
-        const warehouseId = document.getElementById('WarehouseId').value;
+        // Warehouse filtering disabled - show all materials
+        // const warehouseId = document.getElementById('WarehouseId').value;
 
         document.querySelectorAll('#materialsContainer .paint-item-select').forEach(select => {
-            let clearedSelection = false;
-
             Array.from(select.options).forEach(option => {
                 if (!option.value) {
                     return;
                 }
 
-                const matches = !warehouseId || option.getAttribute('data-warehouse') === warehouseId;
-                option.hidden = !matches;
-                option.disabled = !matches;
-
-                if (!matches && select.value === option.value) {
-                    clearedSelection = true;
-                }
+                // Show all options
+                option.hidden = false;
+                option.disabled = false;
             });
-
-            if (clearedSelection) {
-                select.value = '';
-                onMaterialSelected(select);
-            }
         });
     }
 
     function onMaterialSelected(select) {
-        const row = select.closest('.item-row');
+        const row = select.closest('tr');
         const option = selectedOptionOf(select);
         const unitCostInput = row.querySelector('.unit-cost');
         const materialNameInput = row.querySelector('.material-name');
@@ -538,7 +528,7 @@
     }
 
     function onUnitChanged(select) {
-        const row = select.closest('.item-row');
+        const row = select.closest('tr');
         const materialSelect = row.querySelector('.paint-item-select');
         const selectedOption = materialSelect ? materialSelect.options[materialSelect.selectedIndex] : null;
         const originalUnit = selectedOption ? selectedOption.getAttribute('data-uom') : '';
@@ -577,7 +567,7 @@
     }
 
     function removeMaterial(button) {
-        const row = button.closest('.item-row');
+        const row = button.closest('tr');
         if (row) {
             row.remove();
             calculateMaterialCost();
@@ -586,7 +576,7 @@
     }
 
     function removeLastMaterial() {
-        const rows = document.querySelectorAll('#materialsContainer .item-row');
+        const rows = document.querySelectorAll('#materialsContainer tr.material-row');
         if (!rows.length) {
             return;
         }
@@ -597,7 +587,7 @@
     }
 
     function calculateProductionMaterial(element) {
-        const row = element.closest('.item-row');
+        const row = element.closest('tr');
         const qtyInput = row.querySelector('.required-qty');
         const requiredQty = parseFloat(qtyInput.value) || 0;
         const unitCost = parseFloat(row.querySelector('.unit-cost').value) || 0;
@@ -674,7 +664,7 @@
     }
 
     function updateMaterialCount() {
-        const count = document.querySelectorAll('#materialsContainer .item-row').length;
+        const count = document.querySelectorAll('#materialsContainer tr.material-row').length;
         document.getElementById('totalMaterialsCount').textContent = count;
     }
 
@@ -713,7 +703,7 @@
 
     function validateBeforeSubmit(event) {
         const errors = [];
-        const rows = Array.from(document.querySelectorAll('#materialsContainer .item-row'));
+        const rows = Array.from(document.querySelectorAll('#materialsContainer tr.material-row'));
 
         const usableRows = rows.filter(row => {
             const select = row.querySelector('.paint-item-select');
@@ -769,7 +759,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         // Restore any selection that came back from the server (e.g. after a validation error)
-        document.querySelectorAll('#materialsContainer .item-row').forEach(row => {
+        document.querySelectorAll('#materialsContainer tr.material-row').forEach(row => {
             const paintItemSelect = row.querySelector('.paint-item-select');
             const selected = row.getAttribute('data-selected');
 
@@ -780,14 +770,15 @@
 
         filterMaterialsByWarehouse();
 
-        document.querySelectorAll('#materialsContainer .item-row').forEach(row => {
+        document.querySelectorAll('#materialsContainer tr.material-row').forEach(row => {
             const select = row.querySelector('.paint-item-select');
             if (select && select.value) {
                 onMaterialSelected(select);
             }
         });
 
-        document.getElementById('WarehouseId').addEventListener('change', filterMaterialsByWarehouse);
+        // Warehouse filtering disabled - show all materials
+        // document.getElementById('WarehouseId').addEventListener('change', filterMaterialsByWarehouse);
         document.getElementById('OutputQuantity').addEventListener('input', calculateCostPerUnit);
         document.querySelector('form.bill-form').addEventListener('submit', validateBeforeSubmit);
 

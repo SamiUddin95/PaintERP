@@ -26,11 +26,11 @@
             </div>
             <div class="detail-item">
                 <label>Production Date</label>
-                <span>@Model.ProductionDate.ToString("MMM dd, yyyy")</span>
+                <span>@Model.ProductionDate.ToString("MMM dd, yyyy", System.Globalization.CultureInfo.InvariantCulture)</span>
             </div>
             <div class="detail-item">
                 <label>Output Quantity</label>
-                <span>@Model.OutputQuantity.ToString("F2")</span>
+                <span>@Model.OutputQuantity.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)</span>
             </div>
             <div class="detail-item">
                 <label>Status</label>

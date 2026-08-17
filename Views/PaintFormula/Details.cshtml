@@ -68,7 +68,7 @@
                 </div>
                 <div class="detail-item">
                     <label>Selling Price</label>
-                    <span>@Model.SellingPrice.ToString("C")</span>
+                    <span>@(Model.SellingPrice.ToString("C") ?? "N/A")</span>
                 </div>
                 <div class="detail-item">
                     <label>Gross Margin</label>

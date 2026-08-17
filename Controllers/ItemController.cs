@@ -72,7 +72,7 @@ public class ItemController(PaintErpDbContext context) : Controller
                 CurrentStock = i.CurrentStock,
                 AvailableStock = i.AvailableStock,
                 InventoryValue = i.InventoryValue,
-                SellingPrice = i.SellingPrice,
+                SellingPrice = i.SellingPrice ?? 0,
                 ColorHex = i.ColorHex,
                 IsHazardousMaterial = i.IsHazardousMaterial,
                 UnitOfMeasure = i.UnitOfMeasure
@@ -247,7 +247,7 @@ public class ItemController(PaintErpDbContext context) : Controller
             SalesUnit = item.SalesUnit,
             CostMethod = item.CostMethod,
             PurchasePrice = item.PurchasePrice,
-            SellingPrice = item.SellingPrice,
+            SellingPrice = item.SellingPrice ?? 0,
             MSRP = item.MSRP,
             MinimumStock = item.MinimumStock,
             MaximumStock = item.MaximumStock,

@@ -111,7 +111,7 @@
                             <span class="amount">@item.InventoryValue.ToString("C")</span>
                         </td>
                         <td>
-                            <span class="amount">@item.SellingPrice.ToString("C")</span>
+                            <span class="amount">@(item.SellingPrice.ToString("C") ?? "N/A")</span>
                         </td>
                         <td>
                             <div class="actions">

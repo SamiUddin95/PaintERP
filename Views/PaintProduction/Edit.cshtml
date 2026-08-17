@@ -73,7 +73,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label asp-for="FinishedProductId">Finished Product</label>
-                                <select asp-for="FinishedProductId" class="form-control">
+                                <select asp-for="FinishedProductId" class="form-control" id="finishedProductSelect" onchange="toggleNewItemForm()">
                                     <option value="">Select Finished Product</option>
                                     @foreach (var item in Model.PaintItems)
                                     {
@@ -90,6 +90,64 @@
                                         <option value="@formula.Id" selected="@Model.FormulaId == formula.Id">@formula.FormulaName</option>
                                     }
                                 </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <div class="checkbox-wrapper">
+                                    <input asp-for="CreateNewItem" class="form-check-input" id="createNewItemCheckbox" onchange="toggleNewItemForm()" />
+                                    <label asp-for="CreateNewItem" class="form-check-label">Create New Item from Production</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- New Item Details Form (Hidden by default) -->
+                        <div id="newItemForm" class="content-card" style="display: @(Model.CreateNewItem ? "block" : "none");">
+                            <div class="card-header">
+                                <div class="card-title">New Item Details</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="required" asp-for="NewItemDetails.Name">Item Name</label>
+                                        <input asp-for="NewItemDetails.Name" class="form-control" placeholder="Enter new item name">
+                                        <span asp-validation-for="NewItemDetails.Name" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="NewItemDetails.SKU">SKU</label>
+                                        <input asp-for="NewItemDetails.SKU" class="form-control" placeholder="Auto-generated if empty" data-val="false">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label asp-for="NewItemDetails.Category">Category</label>
+                                        <input asp-for="NewItemDetails.Category" class="form-control" placeholder="Finished Product">
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="NewItemDetails.UnitOfMeasure">Unit of Measure</label>
+                                        <select asp-for="NewItemDetails.UnitOfMeasure" class="form-control">
+                                            <option value="GAL">Gallon (GAL)</option>
+                                            <option value="QT">Quart (QT)</option>
+                                            <option value="PT">Pint (PT)</option>
+                                            <option value="L">Liter (L)</option>
+                                            <option value="ML">Milliliter (ML)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label asp-for="NewItemDetails.SellingPrice">Selling Price</label>
+                                        <input asp-for="NewItemDetails.SellingPrice" type="number" step="0.01" class="form-control" placeholder="0.00">
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="NewItemDetails.CalculatedUnitCost">Calculated Unit Cost</label>
+                                        <input asp-for="NewItemDetails.CalculatedUnitCost" type="number" step="0.01" class="form-control" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="NewItemDetails.Description">Description</label>
+                                    <textarea asp-for="NewItemDetails.Description" class="form-control" rows="2" placeholder="Enter item description"></textarea>
+                                </div>
                             </div>
                         </div>
                         <div class="form-row">
@@ -337,13 +395,13 @@
     function addMaterial() {
         const container = document.getElementById('materialsContainer');
         const index = materialIndex++;
-        
+
         const materialHtml = `
-            <div class="item-row" data-index="${index}">
+            <tr class="material-row" data-index="${index}" style="border-bottom: 1px solid #e2e8f0;">
                 <input type="hidden" name="Materials[${index}].Id" value="">
                 <input type="hidden" name="Materials[${index}].PaintProductionId" value="">
-                
-                <div class="col-material-type">
+
+                <td style="padding: 10px; vertical-align: middle;">
                     <select name="Materials[${index}].MaterialType" class="form-control form-control-sm" onchange="updateMaterialName(this)">
                         <option value="">Select Type</option>
                         <option value="Blue Paint">Blue Paint</option>
@@ -355,8 +413,8 @@
                         <option value="Additive">Additive</option>
                     </select>
                     <input type="hidden" name="Materials[${index}].MaterialName" class="material-name">
-                </div>
-                <div class="col-material">
+                </td>
+                <td style="padding: 10px; vertical-align: middle;">
                     <select name="Materials[${index}].PaintItemId" class="form-control form-control-sm paint-item-select" onchange="updateMaterialCost(this)">
                         <option value="">Select Material</option>
                         @foreach (var paintItem in Model.PaintItems)
@@ -364,33 +422,33 @@
                             <option value="@paintItem.Id" data-cost="@paintItem.UnitCost" data-stock="0.00">@paintItem.Name (@paintItem.SKU)</option>
                         }
                     </select>
-                </div>
-                <div class="col-percentage">
+                </td>
+                <td style="padding: 10px; vertical-align: middle;">
                     <input name="Materials[${index}].PercentageInMix" type="number" step="0.01" class="form-control form-control-sm percentage" onchange="calculateProductionMaterial(this)">
-                </div>
-                <div class="col-qty">
-                    <input name="Materials[${index}].RequiredQuantity" type="number" step="0.01" class="form-control form-control-sm required-qty" onchange="calculateProductionMaterial(this)">
-                </div>
-                <div class="col-cost">
-                    <input name="Materials[${index}].UnitCost" type="number" step="0.01" class="form-control form-control-sm unit-cost" onchange="calculateProductionMaterial(this)">
-                </div>
-                <div class="col-total">
-                    <input name="Materials[${index}].TotalCost" type="number" step="0.01" class="form-control form-control-sm total-cost" readonly>
-                </div>
-                <div class="col-action">
-                    <button type="button" class="btn-icon btn-danger" onclick="removeMaterial(this)">
+                </td>
+                <td style="padding: 10px; vertical-align: middle; text-align: right;">
+                    <input name="Materials[${index}].RequiredQuantity" type="number" step="0.01" class="form-control form-control-sm required-qty" onchange="calculateProductionMaterial(this)" style="text-align: right;">
+                </td>
+                <td style="padding: 10px; vertical-align: middle; text-align: right;">
+                    <input name="Materials[${index}].UnitCost" type="number" step="0.01" class="form-control form-control-sm unit-cost" onchange="calculateProductionMaterial(this)" style="text-align: right;">
+                </td>
+                <td style="padding: 10px; vertical-align: middle; text-align: right;">
+                    <input name="Materials[${index}].TotalCost" type="number" step="0.01" class="form-control form-control-sm total-cost" readonly style="text-align: right;">
+                </td>
+                <td style="padding: 10px; vertical-align: middle; text-align: center;">
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeMaterial(this)">
                         <i class="icon-x"></i>
                     </button>
-                </div>
-            </div>
+                </td>
+            </tr>
         `;
-        
+
         container.insertAdjacentHTML('beforeend', materialHtml);
         updateMaterialCount();
     }
 
     function removeMaterial(button) {
-        const row = button.closest('.item-row');
+        const row = button.closest('tr');
         if (row) {
             row.remove();
             calculateMaterialCost();
@@ -399,7 +457,7 @@
     }
 
     function removeLastMaterial() {
-        const rows = document.querySelectorAll('#materialsContainer .item-row');
+        const rows = document.querySelectorAll('#materialsContainer tr.material-row');
         if (!rows.length) {
             return;
         }
@@ -410,16 +468,16 @@
     }
 
     function updateMaterialName(select) {
-        const row = select.closest('.item-row');
+        const row = select.closest('tr');
         const materialNameInput = row.querySelector('.material-name');
         materialNameInput.value = select.value;
     }
 
     function updateMaterialCost(select) {
-        const row = select.closest('.item-row');
+        const row = select.closest('tr');
         const selectedOption = select.options[select.selectedIndex];
         const unitCostInput = row.querySelector('.unit-cost');
-        
+
         if (selectedOption && selectedOption.value) {
             const cost = selectedOption.getAttribute('data-cost') || '0';
             unitCostInput.value = cost;
@@ -428,11 +486,11 @@
     }
 
     function calculateProductionMaterial(element) {
-        const row = element.closest('.item-row');
+        const row = element.closest('tr');
         const requiredQty = parseFloat(row.querySelector('.required-qty').value) || 0;
         const unitCost = parseFloat(row.querySelector('.unit-cost').value) || 0;
         const totalCost = requiredQty * unitCost;
-        
+
         row.querySelector('.total-cost').value = totalCost.toFixed(2);
         calculateMaterialCost();
     }
@@ -469,7 +527,7 @@
     }
 
     function updateMaterialCount() {
-        const count = document.querySelectorAll('#materialsContainer .item-row').length;
+        const count = document.querySelectorAll('#materialsContainer tr.material-row').length;
         document.getElementById('totalMaterialsCount').textContent = count;
     }
 
@@ -479,11 +537,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const rows = document.querySelectorAll('.item-row');
+        const rows = document.querySelectorAll('#materialsContainer tr.material-row');
         rows.forEach((row) => {
             const unitCostInput = row.querySelector('.unit-cost');
             const materialNameInput = row.querySelector('.material-name');
-            const typeSelect = row.querySelector('.col-material-type select');
+            const typeSelect = row.querySelector('.material-type');
             
             if (typeSelect && materialNameInput) {
                 materialNameInput.value = typeSelect.value;

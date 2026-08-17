@@ -13,7 +13,7 @@ public class ItemFormViewModel
     // Identification
     [Display(Name = "SKU")]
     [MaxLength(50)]
-    public string SKU { get; set; } = string.Empty;
+    public string? SKU { get; set; }
 
     [Display(Name = "UPC Barcode")]
     [MaxLength(50)]

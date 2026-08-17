@@ -171,7 +171,7 @@ public class NewItemDetailsViewModel
 
     [Display(Name = "SKU")]
     [MaxLength(50)]
-    public string SKU { get; set; } = string.Empty;
+    public string? SKU { get; set; }
 
     [Display(Name = "Category")]
     [MaxLength(100)]
@@ -182,12 +182,12 @@ public class NewItemDetailsViewModel
     public string UnitOfMeasure { get; set; } = "GAL";
 
     [Display(Name = "Selling Price")]
-    public decimal SellingPrice { get; set; }
+    public decimal? SellingPrice { get; set; }
 
     [Display(Name = "Description")]
     [MaxLength(500)]
     public string Description { get; set; } = string.Empty;
 
     [Display(Name = "Calculated Unit Cost")]
-    public decimal CalculatedUnitCost { get; set; }
+    public decimal? CalculatedUnitCost { get; set; }
 }

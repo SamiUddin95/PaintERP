@@ -27,6 +27,14 @@ public class PaintProduction
     public string? QCReport { get; set; }
     public string? QCNotes { get; set; }
     public string? ProductionNotes { get; set; }
+    public bool CreateNewItem { get; set; }
+    public string? NewItemName { get; set; }
+    public string? NewItemSKU { get; set; }
+    public string? NewItemCategory { get; set; }
+    public string? NewItemUnitOfMeasure { get; set; }
+    public decimal? NewItemSellingPrice { get; set; }
+    public decimal? NewItemCalculatedUnitCost { get; set; }
+    public string? NewItemDescription { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
     public string CreatedBy { get; set; } = string.Empty;
